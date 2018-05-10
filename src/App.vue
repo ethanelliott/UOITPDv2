@@ -15,6 +15,13 @@ export default {
 <style lang="scss">
 $colourMain: #0077ca;
 $background: #d2d2d2;
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
 * {
   padding:0;
   margin:0;
