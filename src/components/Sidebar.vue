@@ -14,10 +14,11 @@
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/todo'")
           span To-Do
           i.fa.fa-list
-    .courses-container(v-for="menuItem in menu")
-      router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.course.toUpperCase()")
-            span {{ menuItem.course.toUpperCase() }}
-            i.fa.fa-book
+    .courses-container
+      .course(v-for="menuItem in menu")
+        router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.course.toUpperCase()")
+              span {{ menuItem.course.toUpperCase() }}
+              i.fa(v-bind:class="'fa-' + menuItem.icon")
     .defaults-container
       router-link.settings-button(v-on:click.native="isToggle = false", v-bind:to="'/settings'")
         span Settings
@@ -87,7 +88,7 @@ export default {
     justify-content: flex-start;
     border-top:3px solid rgb(80,80,80);
   }
-  & > .defaults-container, & > .courses-container  {
+  & > .defaults-container {
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -112,6 +113,38 @@ export default {
         display: flex;
         justify-content: center;
         align-items: center;
+      }
+    }
+  }
+  & > .courses-container  {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    & > * {
+      width:100%;
+      color:white;
+      & > * {
+        width:100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color:white;
+        font-size:1.5em;
+        transition: background 0.3s;
+        &:hover {
+        background: #0077ca;
+        cursor: pointer !important;
+      }
+      & > span {
+      margin-left:0.5em;
+      }
+      & > *:not(span) {
+        width:50px;
+        height:50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
       }
     }
   }

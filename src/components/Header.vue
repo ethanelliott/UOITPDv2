@@ -1,6 +1,7 @@
 <template lang="jade">
   #titlebar
     .title-container
+    .middle-container
     .action-container
       .close-button(v-on:click="closeWindow")
         i.fa.fa-close
@@ -59,9 +60,12 @@ export default {
       justify-content: flex-start;
       align-items: center;
       flex-direction: row;
-      .title {
-        margin-left:8px;
-      }
+    }
+    .middle-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
     }
     .action-container {
       display: flex;
