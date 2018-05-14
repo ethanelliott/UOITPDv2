@@ -1,50 +1,42 @@
 <template lang="jade">
-  #sidebar(v-bind:class="{ active: isToggle }")
+  #sidebar( v-bind:class="[isToggle ? active : '']")
     .toggle-button-container
       span {{ title }}
-      .toggle-button(v-on:click="isToggle = !isToggle")
+      .toggle-button(@click="isToggle = !isToggle")
         i.fa.fa-bars
     .defaults-container
-      router-link.button(v-on:click="isToggle = false", v-bind:to="'/'")
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/'")
           span Home
           i.fa.fa-home
-      router-link.button(v-on:click="isToggle = false", v-bind:to="'/calendar'")
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/calendar'")
           span Calendar
           i.fa.fa-calendar
-      router-link.button(v-on:click="isToggle = false", v-bind:to="'/todo'")
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/todo'")
           span To-Do
           i.fa.fa-list
-    .courses-container
-      router-link.course-button(v-on:click="isToggle = false", v-bind:to="'/course/course1'")
-            span Course1
-            i.fa.fa-book
-      router-link.course-button(v-on:click="isToggle = false", v-bind:to="'/course/course2'")
-            span Course2
-            i.fa.fa-book
-      router-link.course-button(v-on:click="isToggle = false", v-bind:to="'/course/course3'")
-            span Course3
-            i.fa.fa-book
-      router-link.course-button(v-on:click="isToggle = false", v-bind:to="'/course/course4'")
-            span Course4
-            i.fa.fa-book
-      router-link.course-button(v-on:click="isToggle = false", v-bind:to="'/course/course5'")
-            span Course5
+    .courses-container(v-for="menuItem in menu")
+      router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.course.toUpperCase()")
+            span {{ menuItem.course.toUpperCase() }}
             i.fa.fa-book
     .defaults-container
-      router-link.settings-button(v-on:click="isToggle = false", v-bind:to="'/settings'")
+      router-link.settings-button(v-on:click.native="isToggle = false", v-bind:to="'/settings'")
         span Settings
         i.fa.fa-cog
 </template>
 
 <script>
+import menu from '@/imp/menu.js'
 export default {
   name: 'Sidebar',
   data () {
     return {
       title: 'UOITPD',
-      isToggle: false
+      isToggle: false,
+      active: 'active',
+      menu: menu.menu
     }
-  }
+  },
+  methods: {}
 }
 </script>
 
@@ -61,6 +53,9 @@ export default {
   height:100%;
   -webkit-app-region: no-drag;
   transition:left 0.3s;
+  .router-link-exact-active {
+    background:#0077ca;
+  }
   & > .toggle-button-container  {
     border-bottom:3px solid rgb(80,80,80);
     width:100%;

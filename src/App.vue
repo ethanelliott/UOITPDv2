@@ -2,7 +2,9 @@
   <div id="app">
     <router-view class="header" name="header"/>
     <router-view class="sidebar" name="sidebar"/>
-    <router-view class="main" name="main"/>
+    <div id="main-content-wrapper">
+      <router-view class="main" name="main"/>
+    </div>
   </div>
 </template>
 
@@ -14,6 +16,7 @@ export default {
 
 <style lang="scss">
 $colourMain: #0077ca;
+$colourMainDark: #004c99;
 $background: #d2d2d2;
 :not(input):not(textarea),
 :not(input):not(textarea)::after,
@@ -22,6 +25,20 @@ $background: #d2d2d2;
     user-select: none;
     cursor: default;
 }
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+::-webkit-scrollbar-thumb {
+    background: $colourMain;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: $colourMainDark;
+}
+
 * {
   padding:0;
   margin:0;
@@ -38,7 +55,7 @@ body {
   display:grid;
   grid-template-areas: "header header" "gap main";
   grid-template-rows: 30px auto;
-  grid-template-columns: 60px auto;
+  grid-template-columns: 50px auto;
   font-family: sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -55,7 +72,15 @@ body {
   width:250px;
 }
 
-.main {
+#main-content-wrapper {
   grid-area: main;
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto;
+  padding:25px;
+  overflow-y: auto;
+  .main {
+    width:100%;
+  }
 }
 </style>
