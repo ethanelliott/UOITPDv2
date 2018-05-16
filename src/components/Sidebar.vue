@@ -14,6 +14,9 @@
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/todo'")
           span To-Do
           i.fa.fa-list
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/weather'")
+          span Weather
+          i.fa.fa-cloud
     .courses-container
       .course(v-for="menuItem in menu")
         router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.course.toUpperCase()")
@@ -46,11 +49,12 @@ export default {
   left:0;
 }
 #sidebar {
+  font-size: 14px;
   background: rgb(100, 100, 100);
   box-shadow: 0 0 15px 1px rgba(0,0,0,0.5);
   z-index: 500;
   display:grid;
-  grid-template-rows: 50px 150px auto 50px;
+  grid-template-rows: 50px 200px auto 50px;
   height:100%;
   -webkit-app-region: no-drag;
   transition:left 0.3s;

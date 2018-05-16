@@ -7,6 +7,7 @@ import Settings from '@/components/Settings'
 import Course from '@/components/Course'
 import Calendar from '@/components/Calendar'
 import Todo from '@/components/Todo'
+import Weather from '@/components/Weather'
 
 Vue.use(Router)
 
@@ -44,6 +45,15 @@ export default new Router({
       name: 'ToDo',
       components: {
         main: Todo,
+        header: Header,
+        sidebar: Sidebar
+      }
+    },
+    {
+      path: '/weather',
+      name: 'Weather',
+      components: {
+        main: Weather,
         header: Header,
         sidebar: Sidebar
       }

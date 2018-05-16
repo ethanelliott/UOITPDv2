@@ -68,8 +68,8 @@ body {
 .sidebar {
   position: fixed;
   top:0;
-  left:-200px;
-  width:250px;
+  left:-300px;
+  width:350px;
 }
 
 #main-content-wrapper {
@@ -78,6 +78,7 @@ body {
   grid-template-columns: auto;
   grid-template-rows: auto;
   padding:25px;
+  padding-top:10px;
   overflow-y: auto;
   .main {
     width:100%;
