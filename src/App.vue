@@ -15,9 +15,16 @@ export default {
 </script>
 
 <style lang="scss">
-$colourMain: #0077ca;
-$colourMainDark: #004c99;
-$background: #d2d2d2;
+@import "components/colours";
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 :not(input):not(textarea),
 :not(input):not(textarea)::after,
 :not(input):not(textarea)::before {
@@ -47,7 +54,8 @@ a {
   text-decoration: none;
 }
 body {
-  background: $background;
+  background: $main-background;
+  animation: fadein 0.5s;
 }
 #app {
   width:100vw;

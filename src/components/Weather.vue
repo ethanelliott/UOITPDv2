@@ -30,6 +30,7 @@
     #forecast-weather-container
       h1.title Forecast
     #weather-radar-container
+      iframe(style="width:100%;height:100%;",src="https://maps.darksky.net/@radar,2018-5-23,17,43.750702,-79.300301,8?embed=true&amp;timeControl=false&amp;fieldControl=false&amp;defaultField=radar")
 </template>
 
 <script>
@@ -91,18 +92,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "colours";
+iframe {
+  border:none;
+}
 #weather-container {
   display: grid;
   grid-template-areas: "a b" "c b";
-  grid-template-columns: calc(50% - 1.5em) calc(50% - 1.5em);
-  grid-template-rows: calc(50% - 1.5em) calc(50% - 1.5em);
-  grid-gap: 3em;
-  & > *:not(#weather-radar-container) {
+  grid-template-columns: calc(50% - .5em) calc(50% - .5em);
+  grid-template-rows: calc(50% - .5em) calc(50% - .5em);
+  grid-gap: 1em;
+  & > * {
     color:black;
-    background:rgb(245, 245, 245);
-    border-radius: 3px;
-    box-shadow: 0 0 10px 1px rgba(0,0,0,0.5);
-    padding:1em;
+    background: $background;
+    border: 1px solid $main-border;
+    &:not(#weather-radar-container) {
+      padding:1em;
+    }
   }
   #current-weather-container {
     grid-area: a;

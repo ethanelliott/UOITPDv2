@@ -1,6 +1,5 @@
 <template lang="jade">
   #calendar-container
-    h1 Calendar
     #calendar-card
 </template>
 
@@ -9,17 +8,18 @@ export default {
   name: 'Calendar',
   data () {
     return {
+      title: 'Calendar'
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-
+@import "colours";
 #calendar-container {
   display: grid;
   grid-template-areas: "a" "b";
-  grid-template-rows: 50px auto;
+  grid-template-rows:10px auto;
   h1 {
     grid-area:a;
   }
@@ -29,9 +29,11 @@ export default {
     justify-content: center;
     align-items:center;
     color:black;
-    background:rgb(245, 245, 245);
-    border-radius: 3px;
-    box-shadow: 0 0 10px 1px rgba(0,0,0,0.5);
+    color:black;
+    background: $background;
+    border: 1px solid $main-border;
+    //border-radius: 3px;
+    //box-shadow: 0 0 10px 1px rgba(0,0,0,0.5);
   }
 }
 </style>

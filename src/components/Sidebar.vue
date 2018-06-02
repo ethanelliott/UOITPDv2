@@ -45,6 +45,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  @import "colours";
 .active {
   left:0;
 }
@@ -138,17 +139,17 @@ export default {
         &:hover {
         background: #0077ca;
         cursor: pointer !important;
-      }
-      & > span {
-      margin-left:0.5em;
-      }
-      & > *:not(span) {
-        width:50px;
-        height:50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
+        }
+        & > span {
+        margin-left:0.5em;
+        }
+        & > *:not(span) {
+          width:50px;
+          height:50px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
       }
     }
   }

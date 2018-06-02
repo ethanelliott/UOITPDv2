@@ -22,10 +22,16 @@ function createWindow() {
     minHeight: 300,
     minWidth: 920,
     frame: false,
-    transparent: false
+    transparent: false,
+    show:false,
+    backgroundColor: "#d2d2d2"
   });
-  //win.setMenu(null);
   win.loadURL(config.url);
+
+  win.once("ready-to-show", () => {
+    win.show();
+    win.focus();
+  });
 
   win.on('closed', () => {
     win = null;

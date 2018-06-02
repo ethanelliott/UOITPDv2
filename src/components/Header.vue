@@ -1,6 +1,7 @@
 <template lang="jade">
   #titlebar
     .title-container
+      span UOITPD -  {{ name }}
     .middle-container
     .action-container
       .close-button(v-on:click="closeWindow")
@@ -18,7 +19,7 @@ export default {
   name: 'Header',
   data () {
     return {
-      title: 'Title'
+      name: 'Ethan'
     }
   },
   methods: {
@@ -39,6 +40,7 @@ export default {
 }
 </script>
 <style lang="scss">
+  @import "colours";
   #titlebar {
     z-index: 1;
     width:100%;
@@ -47,7 +49,7 @@ export default {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(#bababa,#d2d2d2);
+    background:$colourMain;
     -webkit-app-region: drag;
     & > * {
       -webkit-app-region: drag;
@@ -60,6 +62,8 @@ export default {
       justify-content: flex-start;
       align-items: center;
       flex-direction: row;
+      margin-left:75px;
+      letter-spacing: 1px;
     }
     .middle-container {
       display: flex;
@@ -73,7 +77,7 @@ export default {
       align-items: center;
       flex-direction: row-reverse;
       & > * {
-        background:rgb(180, 180, 180);
+        background:$colourMain;
         -webkit-app-region: no-drag;
         padding-left:1em;
         padding-right:1em;
@@ -83,7 +87,7 @@ export default {
         justify-content: center;
         align-items: center;
         &:hover {
-          background:#0077ca;
+          background:$colourMainDark;
           cursor: pointer;
       }
       }
