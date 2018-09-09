@@ -7,6 +7,8 @@ import Settings from '@/components/Settings'
 import Course from '@/components/Course'
 import Calendar from '@/components/Calendar'
 import Todo from '@/components/Todo'
+import Projects from '@/components/Projects'
+import Notes from '@/components/Notes'
 import Weather from '@/components/Weather'
 import Login from '@/components/Login'
 
@@ -55,6 +57,24 @@ export default new Router({
       name: 'ToDo',
       components: {
         main: Todo,
+        header: Header,
+        sidebar: Sidebar
+      }
+    },
+    {
+      path: '/projects',
+      name: 'Projects',
+      components: {
+        main: Projects,
+        header: Header,
+        sidebar: Sidebar
+      }
+    },
+    {
+      path: '/notes',
+      name: 'Notes',
+      components: {
+        main: Notes,
         header: Header,
         sidebar: Sidebar
       }

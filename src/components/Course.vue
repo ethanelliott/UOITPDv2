@@ -1,6 +1,6 @@
 <template lang="jade">
   #course-container
-    h1 {{ course_data.name }} - {{ course_data.title }}
+    h1 {{ courseid }} {{ course_data.name }} - {{ course_data.title }}
     .long-boi
 </template>
 
@@ -11,16 +11,15 @@ const BrowserWindow = remote.BrowserWindow
 export default {
   name: 'Course',
   data () {
-    let da
-    ipcRenderer.send('get-course-data', this.courseid)
-    ipcRenderer.on('give-course-data', (event, arg) => {
-      da = arg[0]
-    })
     return {
-      course_data: da
+      course_data: {
+        name: "Name",
+        title: "Title"
+      }
     }
   },
   mounted() {
+
   },
   props: ['courseid']
 }

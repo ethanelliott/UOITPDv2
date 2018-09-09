@@ -14,9 +14,15 @@
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/todo'")
           span To-Do
           i.fa.fa-list
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/projects'")
+          span Projects
+          i.fa.fa-tasks
+      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/notes'")
+          span Notes
+          i.fa.fa-file
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/weather'")
           span Weather
-          i.fa.fa-cloud
+          i.fa.fa-sunny
     .courses-container
       .course(v-for="menuItem in menu", :style="{'background': '#' + menuItem.color + 'ff'}")
         router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.name.toUpperCase()")
@@ -65,7 +71,7 @@ export default {
     box-shadow: 0 0 15px 1px rgba(0,0,0,0.5);
     z-index: 50000;
     display:grid;
-    grid-template-rows: 50px 200px auto 50px;
+    grid-template-rows: 50px 300px auto 50px;
     height:100%;
     -webkit-app-region: no-drag;
     transition:left 0.3s;
