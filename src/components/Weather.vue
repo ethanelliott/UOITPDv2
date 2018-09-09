@@ -71,7 +71,7 @@ export default {
     this.getWeather()
     setInterval(() => {
       this.getWeather()
-    }, 900 * 1000)
+    }, 900000)
   },
   methods: {
     getWeather () {
@@ -92,7 +92,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "colours";
+@import "../sass/colours";
 iframe {
   border:none;
 }

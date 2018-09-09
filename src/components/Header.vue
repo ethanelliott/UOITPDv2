@@ -13,14 +13,21 @@
 </template>
 
 <script>
-const remote = window.require('electron').remote
+const {remote, ipcRenderer} = window.require('electron')
+const BrowserWindow = remote.BrowserWindow
 const w = remote.getCurrentWindow()
 export default {
   name: 'Header',
   data () {
     return {
-      name: 'Ethan'
+      name: ''
     }
+  },
+  mounted() {
+    ipcRenderer.send('get-name')
+    ipcRenderer.on('give-name', (event, arg) => {
+      this.name = arg
+    })
   },
   methods: {
     closeWindow: (event) => {
@@ -40,9 +47,9 @@ export default {
 }
 </script>
 <style lang="scss">
-  @import "colours";
+  @import "../sass/colours";
   #titlebar {
-    z-index: 1;
+    z-index: 10000;
     width:100%;
     height:100%;
     display: flex;

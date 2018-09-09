@@ -17,12 +17,19 @@
   },
   "main": "main.js",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "crypto": "^1.0.1",
+    "diskdb": "^0.1.17",
     "electron": "^2.0.0",
+    "electron-window-state": "^4.1.1",
     "html5-geolocation": "^1.0.1",
     "jade": "^1.11.0",
+    "moment": "^2.22.2",
     "node-sass": "^4.9.0",
+    "request-ssl": "^0.0.14",
     "sass-loader": "^7.0.1",
     "vue": "^2.5.2",
+    "vue-full-calendar": "^2.6.0",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

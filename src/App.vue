@@ -15,7 +15,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import "components/colours";
+@import "sass/colours";
 @keyframes fadein {
     from {
         opacity: 0;
@@ -87,9 +87,11 @@ body {
   grid-template-rows: auto;
   padding:25px;
   padding-top:10px;
-  overflow-y: auto;
+  overflow-y: hidden;
   .main {
     width:100%;
+    animation: fadein 0.5s;
   }
 }
 </style>
+

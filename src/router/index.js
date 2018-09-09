@@ -8,6 +8,7 @@ import Course from '@/components/Course'
 import Calendar from '@/components/Calendar'
 import Todo from '@/components/Todo'
 import Weather from '@/components/Weather'
+import Login from '@/components/Login'
 
 Vue.use(Router)
 
@@ -27,6 +28,15 @@ export default new Router({
       name: 'Settings',
       components: {
         main: Settings,
+        header: Header,
+        sidebar: Sidebar
+      }
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      components: {
+        main: Login,
         header: Header,
         sidebar: Sidebar
       }

@@ -1,0 +1,30 @@
+@import "colours";
+
+.input {
+    font-size: 1.1em;
+    padding: 1em;
+    border: none;
+    color: $main-text-colour;
+    background: $main-background;
+    border: 1px solid $main-border;
+}
+
+.input:focus {
+    color: $main-text-colour;
+    background: $main-background;
+    outline: none;
+}
+
+.button {
+    background-color: $colourMain;
+    color: white;
+    font-size: 1.1em;
+    padding: 1em;
+    border: none;
+    cursor: pointer;
+    opacity: 0.9;
+}
+
+.button:hover {
+    opacity:1;
+}

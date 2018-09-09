@@ -13,64 +13,42 @@
       #summary-wrapper
         #summary.classes(style="color: #004c99")
           #summary-graphic
-            span 4
+            span {{ courses_today.length }}
           span Classes
         #summary.classes(style="color: #c53320")
           #summary-graphic
-            span 1
+            span 0
           span Projects
         #summary.classes(style="color: #ca6614")
           #summary-graphic
-            span 2
+            span 0
           span To-Dos
-        #week-of-work
-          .day
-          .day
-          .day
-          .day
-          .day
-          .day
-          .day
     #schedule-container
       h1 Schedule
       #schedule-wrapper
         #daybreak Today
         #linebreak
-        .item
-          .event-name SOFE2720 Lecture
-          .event-location UA1350
-          .event-time 11:10am - 12:30pm
-          .icon
-            i.fa.fa-book
-        .item
-          .event-name SOFE2720 Tutorial
-          .event-location UA1350
-          .event-time 11:10am - 12:30pm
-          .icon
-            i.fa.fa-book
+        .item-wrapper(v-for="course in courses_today")
+          .item(:style="{'background-color': '#' + course.colour + '40', 'border-left': '10px solid ' + '#' + course.colour + 'ff' }")
+            .event-name {{ course.name + " " + course.type }}
+            .event-location {{ course.place }}
+            .event-time {{ (new Date(course.startTime)).toLocaleTimeString() }} - {{ (new Date(course.endTime)).toLocaleTimeString() }}
+            .icon(:style="{'color': '#' + course.colour}")
+              i.fa(v-bind:class="'fa-' + course.icon")
         #daybreak Tomorrow
         #linebreak
-        .item
-          .event-name SOFE2720 Lecture
-          .event-location UA1350
-          .event-time 11:10am - 12:30pm
-          .icon
-            i.fa.fa-book
-        .item
-          .event-name SOFE2720 Tutorial
-          .event-location UA1350
-          .event-time 11:10am - 12:30pm
-          .icon
-            i.fa.fa-book
-        .item
-          .event-name SOFE2720 Tutorial
-          .event-location UA1350
-          .event-time 11:10am - 12:30pm
-          .icon
-            i.fa.fa-book
+        .item-wrapper(v-for="course in courses_tomorrow")
+          .item(:style="{'background-color': '#' + course.colour + '40', 'border-left': '10px solid ' + '#' + course.colour + 'ff' }")
+            .event-name {{ course.name + " " + course.type }}
+            .event-location {{ course.place }}
+            .event-time {{ (new Date(course.startTime)).toLocaleTimeString() }} - {{ (new Date(course.endTime)).toLocaleTimeString() }}
+            .icon(:style="{'color': '#' + course.colour}")
+              i.fa(v-bind:class="'fa-' + course.icon")
     #projects-container
       h1 Projects
       #projects-wrapper
+        #daybreak Soon
+        #linebreak
         .project
           .project-name Project Name
           .project-course Course
@@ -78,22 +56,16 @@
           .project-warning
             i.fa.fa-warning
           .project-progress
-        .project
-          .project-name Project Name
-          .project-course Course
-          .project-due On this date
-          .project-warning
-            i.fa.fa-warning
-          .project-progress
-    #note-container
-      h1 Notes
-      #notes-wrapper
-        .note
+        #daybreak Upcoming
+        #linebreak
     #todo-container
       h1 To-Do
 </template>
 
 <script>
+const {remote, ipcRenderer} = window.require('electron')
+const BrowserWindow = remote.BrowserWindow
+
 function Get ($url, $method, $callback, $json) {
   $json = $json || false
   let xmlhttp
@@ -132,8 +104,10 @@ export default {
       datestr: dateFormat(new Date()),
       weatherstr: 'Loading Weather...',
       // eslint-disable-next-line
-      weathertemp: (1 + 2 === 3 ? '' : '25°C'),
-      weathericon: 'wi'
+      weathertemp: '',
+      weathericon: 'wi',
+      courses_today: [],
+      courses_tomorrow: []
     }
   },
   methods: {
@@ -147,6 +121,20 @@ export default {
     }
   },
   mounted () {
+    ipcRenderer.send("check-login")
+    ipcRenderer.on('not-logged-in', (event, arg) => {
+      this.$router.push('/login')
+    })
+
+    ipcRenderer.send("get-courses-today")
+    ipcRenderer.on('give-courses-today', (event, arg) => {
+      this.courses_today = arg
+    })
+    ipcRenderer.send("get-courses-tomorrow")
+    ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
+      this.courses_tomorrow = arg
+    })
+
     this.getWeather()
     setInterval(() => {
       this.getWeather()
@@ -158,15 +146,22 @@ export default {
   }
 }
 </script>
+
 <style lang="scss" scoped>
-  @import "colours";
+  @import "../sass/colours";
   #home-container {
-    color:#ca6614;
+    color:black;
     display: grid;
-    grid-template-areas: "a a a a a a" "f f c c d d" "b b c c d d" "b b c c g g";
-    grid-template-rows: 50px 1fr 1fr 1fr;
+    grid-template-areas: "a a a a a a"
+                         "c c f f b b"
+                         "c c g g b b"
+                         "c c g g b b"
+                         "c c g g b b";
+    grid-template-rows: 50px 1fr 1fr 1fr 1fr;
     grid-template-columns: repeat(6, 1fr);
     grid-gap: 1em;
+    height:94vh;
+    width:100%;
     & > * {
       display:grid;
       grid-template-rows: 25px auto;
@@ -177,8 +172,14 @@ export default {
       padding:0.5em;
       overflow-y: auto;
       h1 {
+        width:100%;
+        background: $background;
+        border-bottom: 1px solid $main-border;
+        padding-bottom: 0.25em;
         font-size: 22px;
         grid-area: title;
+        position: sticky;
+        top: 0px;
       }
     }
     #info-container {
@@ -221,16 +222,16 @@ export default {
       grid-area: f;
       #summary-wrapper {
         display:grid;
-        grid-template-areas: "a b c" "d d d";
+        grid-template-areas: "a b c";
         grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: 3fr 1fr;
+        grid-template-rows: 1fr;
         grid-gap: 1em;
         #summary {
           display:flex;
           justify-content: center;
           align-items: center;
           flex-direction: column;
-          font-size: 2.8vh;
+          font-size: 2.7vh;
           #summary-graphic {
             display: flex;
             justify-content: center;
@@ -238,21 +239,11 @@ export default {
             border: 7px solid currentColor;
             border-bottom-color: transparent;
             border-radius: 50%;
-            width:7vh;
-            height:7vh;
+            width:6.5vh;
+            height:6.5vh;
             span {
               font-size: 2em;
             }
-          }
-        }
-        #week-of-work {
-          grid-area: d;
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          grid-template-rows: 1fr;
-          grid-gap: 1em;
-          & > * {
-            background: #229622;
           }
         }
       }
@@ -276,17 +267,19 @@ export default {
           border-bottom:1px solid $main-border;
           margin-bottom:0.5em;
         }
-        .item {
+        .item-wrapper {
+          width: 100%;
+          margin-top:0.5em;
+          margin-bottom:0.5em;
+
+          .item {
           display: grid;
           grid-template-areas: "a g" "b g" "c g";
           grid-template-columns: 5fr 1fr;
           grid-template-rows: 3fr 2fr 2fr;
-          height:80px;
-          width: 100%;
-          margin-top:0.5em;
-          margin-bottom:0.5em;
-          border-left: 10px solid red;
-          background: rgba(255, 0, 0, 0.4);
+          padding: 0.3em 0;
+          width: calc(100% - 10px);
+          border-left: 10px solid #ff0000ff;
           font-size:16px;
           transition: all 0.3s;
           &:hover {
@@ -307,6 +300,7 @@ export default {
           .event-location {
             grid-area: b;
             padding-left:16px;
+            font-style: italic;
           }
           .event-time {
             grid-area: c;
@@ -320,6 +314,7 @@ export default {
             font-size: 32px;
           }
         }
+        }
       }
     }
     #projects-container {
@@ -331,13 +326,23 @@ export default {
         flex-direction: column;
         padding-left:1em;
         padding-right:1em;
+        #daybreak {
+          width:100%;
+          padding:0.8em;
+        }
+        #linebreak {
+          width:100%;
+          height:0;
+          border-bottom:1px solid $main-border;
+          margin-bottom:0.5em;
+        }
         .project {
           display: grid;
           grid-template-areas: "a a h" "b b h" "c c h" "d d d";
           grid-template-columns: 2fr 2fr 1fr;
           grid-template-rows: 3fr 2fr 2fr 1fr;
           border-left: 10px solid rgba(34, 150, 34, 1);
-          background: rgba(34, 150, 34, 0.4);
+          background: rgba(34, 150, 34, 0.2);
           height:90px;
           width:100%;
           transition: all 0.3s;
@@ -377,19 +382,13 @@ export default {
           }
           .project-progress {
             grid-area: d;
-            background: black;
+            //background: black;
           }
         }
       }
     }
     #todo-container {
       grid-area: g;
-    }
-    #note-container {
-      grid-area: d;
-      #notes-wrapper {
-        .note {}
-      }
     }
   }
 </style>
