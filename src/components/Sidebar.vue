@@ -22,7 +22,7 @@
           i.fa.fa-file
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/weather'")
           span Weather
-          i.fa.fa-sunny
+          i.fa.fa-cloud
     .courses-container
       .course(v-for="menuItem in menu", :style="{'background': '#' + menuItem.color + 'ff'}")
         router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.name.toUpperCase()")
