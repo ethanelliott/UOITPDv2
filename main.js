@@ -201,10 +201,11 @@ function getDataFromMycampus(userDetails) {
         jar: sess
       }, (err_01, res_01, body_01) => {
         let nameContentArray = []
-        cheerio.load(body_01)('p.whitespace1').each(() => {
+        cheerio.load(body_01)('p.whitespace1').each(function() {
           nameContentArray.push(this)
         })
-        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] })
+        let name = nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] 
+        db.user.save({ name })
       });
       request.get({
         url: (BASE_URL + DETAIL_URL),
@@ -216,7 +217,8 @@ function getDataFromMycampus(userDetails) {
           jar: sess
         }, (err_2, res_2, body_2) => {
           let classes = []
-          cheerio.load(body_2)('acronym').each(() => {
+          let ch = cheerio.load(body_2)
+          ch('acronym').each(function() {
             classes.push(this)
           })
           let CRNS = []
@@ -324,12 +326,30 @@ function getDataFromMycampus(userDetails) {
                 for (let g = 0; g <= dateRangeWeeks; g++) {
                   let classDateThing = new Date()
                   classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g))
-                  if (classDateThing.getTime() > (new Date("11/04/18").getTime())) {
-                    classDateThing.setTime(start.getTime() + (1 * 1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g))
+                  console.log(classDateThing.getTime() + " > " + (new Date(2018, 11, 4, 0, 0, 0).getTime()) + " => " + (classDateThing.getTime() > (new Date(2018, 11, 4, 0, 0, 0).getTime())))
+                  if (classDateThing.getTime() > (new Date(2018, 11, 4, 0, 0, 0).getTime())) {
+                    classDateThing.setTime(start.getTime() + (1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g))
+                    console.log("correct for DST: " + classDateThing.getTime())
                   }
+                  let startTime = moment(CRNS[i].times[j].startTime, "hh:mm a")
+                  let endTime = moment(CRNS[i].times[j].endTime, "hh:mm a")
                   if (CRNS[i].times[j].startTime !== "TBA" && CRNS[i].times[j].endTime !== "TBA") {
-                    startTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].startTime)
-                    endTimeDateObject = new Date(classDateThing.toLocaleDateString() + " " + CRNS[i].times[j].endTime)
+                    startTimeDateObject = new Date(
+                      classDateThing.getFullYear(),
+                      classDateThing.getMonth(), 
+                      classDateThing.getDate(), 
+                      startTime.hour(), 
+                      startTime.minute(), 
+                      startTime.second()
+                    )
+                    endTimeDateObject = new Date(
+                      classDateThing.getFullYear(),
+                      classDateThing.getMonth(), 
+                      classDateThing.getDate(), 
+                      endTime.hour(), 
+                      endTime.minute(), 
+                      endTime.second()
+                    )
                     eventInfo = {
                       "code": CRNS[i].code,
                       "crn": CRNS[i].crn,
@@ -340,7 +360,7 @@ function getDataFromMycampus(userDetails) {
                       "place": CRNS[i].times[j].place,
                       "type": CRNS[i].times[j].type,
                       "colour": db.courses.find().find(courseLookupByCode(CRNS[i].code)).color,
-                      "icon": "book",
+                      "icon": "book"
                     }
                     calArr.push(eventInfo)
                   }
