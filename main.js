@@ -1,3 +1,13 @@
+//TODO: Fix DST bug, rework rest calls with promises?, re-work databases for simplicity
+// Courses file contains all personalized details of course, with lots of processing on course data (list of classes as proper dates (moment))
+// Schedule file contains events with date, starttime, endtime, course code
+// ToDo file contains arr of to-do tasks with link to course code
+// Projects file contains arr of projects with link to course code
+// Notes file contains arr of markdown notes with link to course code
+// User file contains user data of person logged in (name, program, etc...)
+// Settings file contains app settings (dark/light theme, custom themes, custom features)
+
+
 console.time("init")
 const PROD = false
 const DATABASE_TABLES = [
