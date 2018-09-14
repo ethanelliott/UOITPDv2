@@ -199,30 +199,24 @@ function getDataFromMycampus(userDetails) {
       request.get({
         url: (BASE_URL + NAME_URL),
         jar: sess
-      }, function (err_01, res_01, body_01) {
-        let na = cheerio.load(body_01)
+      }, (err_01, res_01, body_01) => {
         let nameContentArray = []
-        na('p.whitespace1').each(function () {
-          nameContentArray.push(this);
-        });
-        nameContentArray = nameContentArray[0]
-        let name = nameContentArray.children[0].data.replace('\n', '').split(' ')[0]
-        db.user.save({
-          name
+        cheerio.load(body_01)('p.whitespace1').each(() => {
+          nameContentArray.push(this)
         })
+        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] })
       });
       request.get({
         url: (BASE_URL + DETAIL_URL),
         jar: sess
-      }, function (err_1, res_1, body_1) {
+      }, (err_1, res_1, body_1) => {
         request.post({
           url: DETAIL_URL,
           form: detailLoad,
           jar: sess
-        }, function (err_2, res_2, body_2) {
-          let ch = cheerio.load(body_2)
+        }, (err_2, res_2, body_2) => {
           let classes = []
-          ch('acronym').each(function () {
+          cheerio.load(body_2)('acronym').each(() => {
             classes.push(this)
           })
           let CRNS = []
@@ -365,7 +359,6 @@ function getDataFromMycampus(userDetails) {
     }
   })
 }
-
 
 function randomHexColour() {
   var letters = '0123456789ABCDEF'.split('');
