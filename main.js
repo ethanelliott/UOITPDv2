@@ -11,10 +11,9 @@
 console.time("init")
 const PROD = false
 const DATABASE_TABLES = [
-  'courses',
-  'todo',
-  'schedule',
   'details',
+  'schedule',
+  'todo',
   'notes',
   'projects',
   'settings',
@@ -126,7 +125,7 @@ ipcMain.on('user-login', (event, arg) => {
 })
 
 ipcMain.on('get-courses', (event, arg) => {
-  event.sender.send('give-courses', (db.courses.find().length > 0 ? db.courses.find() : []))
+  event.sender.send('give-courses', (db.details.find().length > 0 ? db.details.find() : []))
 })
 
 ipcMain.on('get-name', (event, arg) => {
@@ -134,7 +133,17 @@ ipcMain.on('get-name', (event, arg) => {
 })
 
 ipcMain.on('get-calendar', (event, arg) => {
-  event.sender.send('give-calendar', (db.schedule.find().length > 0 ? db.schedule.find() : []))
+  if (db.schedule.find().length > 0) {
+    let calArr = db.schedule.find().map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      return ele
+    })
+    event.sender.send('give-calendar', calArr)
+  } else {
+    event.sender.send('give-calendar', [])
+  }
 })
 
 ipcMain.on('get-course-data', (event, arg) => {
@@ -153,6 +162,15 @@ ipcMain.on('get-courses-today', (event, arg) => {
             return true;
           }
       return false;
+    }).map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.location = getLocationByCRN(ele.code, ele.crn)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.icon = getIconByCourseCode(ele.code)
+      return ele
+    }).sort((a, b) => {
+      return a.startTimeMilisec - b.startTimeMilisec
     })
   )
 })
@@ -168,11 +186,11 @@ ipcMain.on('get-courses-tomorrow', (event, arg) => {
             return true;
           }
       return false;
+    }).sort((a, b) => {
+      return a.startTimeMilisec - b.startTimeMilisec
     })
   )
 })
-
-//All functionality
 
 function getDataFromMycampus(userDetails) {
   const LOGIN_URL = "http://portal.mycampus.ca/cp/home/login"
@@ -205,6 +223,7 @@ function getDataFromMycampus(userDetails) {
     form: PAYLOAD,
     jar: sess
   }, (err_0, res_0, body_0) => {
+    //Login successful
     if (!body_0.includes("Error: Failed Login")) {
       request.get({
         url: (BASE_URL + NAME_URL),
@@ -214,8 +233,7 @@ function getDataFromMycampus(userDetails) {
         cheerio.load(body_01)('p.whitespace1').each(function() {
           nameContentArray.push(this)
         })
-        let name = nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] 
-        db.user.save({ name })
+        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] })
       });
       request.get({
         url: (BASE_URL + DETAIL_URL),
@@ -243,7 +261,7 @@ function getDataFromMycampus(userDetails) {
                 if (!isNaN(location[0]) && stringArray[4].split(' ')[0] === "Software") {
                   location = "SIRC" + stringArray[4].split(' ')[stringArray[4].split(' ').length - 1];
                 }
-                let classTimeObject = {
+                timeTableObject.push({
                   week: stringArray[1],
                   startTime: classTimeString[0],
                   endTime: classTimeString[1],
@@ -252,8 +270,7 @@ function getDataFromMycampus(userDetails) {
                   dateRange: stringArray[5],
                   type: stringArray[6],
                   instructor: stringArray[7]
-                }
-                timeTableObject.push(classTimeObject)
+                })
               }
             }
             let fullClassName = ch(classes[h].parent.parent.parent.parent.children[0]).text().split(' - ')
@@ -264,33 +281,50 @@ function getDataFromMycampus(userDetails) {
               section: fullClassName[2],
               times: timeTableObject,
               type: timeTableObject[0].type
+
             }
+            //CRNS contains the data for each CRN. This needs to be combined by course code
             CRNS.push(classInfo)
           }
-          //We have the classes now!
-          db.details.save(CRNS)
-
+          //Collect CRNS by course code
           let classData = []
           let courseCodeList = []
           for (let i = 0; i < CRNS.length; i++) {
             if (courseCodeList.indexOf(CRNS[i].code) < 0) {
               courseCodeList.push(CRNS[i].code);
               let ClassObject = {
-                "name": CRNS[i].code,
-                "title": CRNS[i].name,
-                "icon": "book",
-                "color": randomHexColour(),
-                "lecture": CRNS.find(findCourseType("Lecture", CRNS[i].code)),
-                "lab": CRNS.find(findCourseType("Laboratory", CRNS[i].code)),
-                "tutorial": CRNS.find(findCourseType("Tutorial", CRNS[i].code)),
-                "icon": "book",
+                code: CRNS[i].code,
+                name: CRNS[i].name,
+                icon: "book",
+                color: randomHexColour(),
+                lecture: CRNS.find(findCourseType("Lecture", CRNS[i].code)),
+                lab: CRNS.find(findCourseType("Laboratory", CRNS[i].code)),
+                tutorial: CRNS.find(findCourseType("Tutorial", CRNS[i].code)),
+                crnLookup: [
+                  {
+                    crn: (CRNS.find(findCourseType("Lecture", CRNS[i].code)) ? CRNS.find(findCourseType("Lecture", CRNS[i].code)).crn : ""),
+                    type: "Lecture",
+                    class: CRNS.find(findCourseType("Lecture", CRNS[i].code))
+                  },
+                  {
+                    crn: (CRNS.find(findCourseType("Laboratory", CRNS[i].code)) ? CRNS.find(findCourseType("Laboratory", CRNS[i].code)).crn : ""),
+                    type: "Laboratory",
+                    class: CRNS.find(findCourseType("Laboratory", CRNS[i].code))
+                  },
+                  {
+                    crn: (CRNS.find(findCourseType("Tutorial", CRNS[i].code)) ? CRNS.find(findCourseType("Tutorial", CRNS[i].code)).crn : ""),
+                    type: "Tutorial",
+                    class: CRNS.find(findCourseType("Tutorial", CRNS[i].code))
+                  }
+                ]
               }
               classData.push(ClassObject)
             }
           }
-          db.courses.save(classData)
+          //We have the classes now!
+          db.details.save(classData)
 
-          //Generate Calendar JSON
+          //Now, generate the calendar JSON
           const weekdayReference = {
             "M": 1,
             "T": 2,
@@ -299,63 +333,67 @@ function getDataFromMycampus(userDetails) {
             "F": 5
           }
           let calArr = []
-          let eventInfo = {}
           for (let i = 0; i < CRNS.length; i++) {
             for (let j = 0; j < CRNS[i].times.length; j++) {
               let dateRange = CRNS[i].times[j].dateRange.split(" - ")
-              let startTimeDateObject
-              let endTimeDateObject
+              //If the date is one-time or a range
               if (dateRange[0] === dateRange[1]) {
-                startTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].startTime)
-                endTimeDateObject = new Date(dateRange[0] + " " + CRNS[i].times[j].endTime)
-                eventInfo = {
+                calArr.push({
                   "code": CRNS[i].code,
                   "crn": CRNS[i].crn,
                   "name": CRNS[i].name,
                   "section": CRNS[i].section,
-                  "startTime": startTimeDateObject.toISOString(),
-                  "endTime": endTimeDateObject.toISOString(),
+                  "startTime": (new Date(dateRange[0] + " " + CRNS[i].times[j].startTime)).toISOString(),
+                  "endTime": (new Date(dateRange[0] + " " + CRNS[i].times[j].endTime)).toISOString(),
                   "place": CRNS[i].times[j].place,
                   "type": CRNS[i].times[j].type,
-                  "colour": db.courses.find().find(courseLookupByCode(CRNS[i].code)),
+                  "colour": db.details.find().find(courseLookupByCode(CRNS[i].code)),
                   "icon": "book"
-                };
-                calArr.push(eventInfo)
-              } else {
+                })
+              } else { //Date range... this gets messy
+                //calculate number of weeks inside the date range
                 var dateRangeWeeks = Math.floor((new Date(dateRange[1]).getTime() - new Date(dateRange[0]).getTime()) / (1000 * 60 * 60 * 24 * 7))
+                //start of date range (the first day of school)
                 let start = new Date(dateRange[0])
-                let end = new Date(dateRange[1])
+                //Distance from start date to date of class
                 let delta = (start.getDay() - weekdayReference[CRNS[i].times[j].day])
+                //make sure it evaluated (otherwise its most likely an online course)
                 if (!isNaN(delta)) {
                   if (delta > 0) {
+                    //Looks like it comes after the first day
                     start.setTime(start.getTime() + ((7 - delta) * 1000 * 60 * 60 * 24))
                   } else {
+                    //Looks like it happens starting the next week
                     start.setTime(start.getTime() + ((-delta) * 1000 * 60 * 60 * 24))
                   }
                 }
+                //Now lets go for each week inside the course date range
                 for (let g = 0; g <= dateRangeWeeks; g++) {
-                  let classDateThing = new Date()
-                  classDateThing.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g))
-                  console.log(classDateThing.getTime() + " > " + (new Date(2018, 11, 4, 0, 0, 0).getTime()) + " => " + (classDateThing.getTime() > (new Date(2018, 11, 4, 0, 0, 0).getTime())))
-                  if (classDateThing.getTime() > (new Date(2018, 11, 4, 0, 0, 0).getTime())) {
-                    classDateThing.setTime(start.getTime() + (1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g))
-                    console.log("correct for DST: " + classDateThing.getTime())
+                  //cdt is just a random reference to a date that I can use
+                  let cdt = new Date() //cdt actually stands for course date thing
+                  //Add 1 week worth of miliseconds from the start for each week
+                  cdt.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g))
+                  //This is a little bit annoying. I hate daylight savings. Also, note that months start at 0? for some reason.
+                  if (cdt.getTime() > (new Date(2018, (11 - 1), 4, 0, 0, 0).getTime())) {
+                    cdt.setTime(start.getTime() + (1 * 1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g))
                   }
+                  //Special thanks to moment for making this so easy
                   let startTime = moment(CRNS[i].times[j].startTime, "hh:mm a")
                   let endTime = moment(CRNS[i].times[j].endTime, "hh:mm a")
+                  //Make sure we are only adding the courses that actually have a timeslot to the calendar
                   if (CRNS[i].times[j].startTime !== "TBA" && CRNS[i].times[j].endTime !== "TBA") {
                     startTimeDateObject = new Date(
-                      classDateThing.getFullYear(),
-                      classDateThing.getMonth(), 
-                      classDateThing.getDate(), 
+                      cdt.getFullYear(),
+                      cdt.getMonth(), 
+                      cdt.getDate(), 
                       startTime.hour(), 
                       startTime.minute(), 
                       startTime.second()
                     )
                     endTimeDateObject = new Date(
-                      classDateThing.getFullYear(),
-                      classDateThing.getMonth(), 
-                      classDateThing.getDate(), 
+                      cdt.getFullYear(),
+                      cdt.getMonth(), 
+                      cdt.getDate(), 
                       endTime.hour(), 
                       endTime.minute(), 
                       endTime.second()
@@ -363,14 +401,9 @@ function getDataFromMycampus(userDetails) {
                     eventInfo = {
                       "code": CRNS[i].code,
                       "crn": CRNS[i].crn,
-                      "name": CRNS[i].name,
-                      "section": CRNS[i].section,
+                      "startTimeMilisec": startTimeDateObject.getTime(),
                       "startTime": startTimeDateObject.toISOString(),
-                      "endTime": endTimeDateObject.toISOString(),
-                      "place": CRNS[i].times[j].place,
-                      "type": CRNS[i].times[j].type,
-                      "colour": db.courses.find().find(courseLookupByCode(CRNS[i].code)).color,
-                      "icon": "book"
+                      "endTime": endTimeDateObject.toISOString()
                     }
                     calArr.push(eventInfo)
                   }
@@ -378,35 +411,111 @@ function getDataFromMycampus(userDetails) {
               }
             }
           }
+          //sort that SOB
           calArr.sort((a, b) => {
-            return a.startTime - b.startTime
-          });
+            return a.startTimeMilisec - b.startTimeMilisec
+          })
+          //save that SOB
           db.schedule.save(calArr)
         });
       });
     } else {
-      console.log("Login Error");
+      //Looks like you got your login creds wrong...try again
+      console.log("Login Error")
     }
   })
 }
 
 function randomHexColour() {
-  var letters = '0123456789ABCDEF'.split('');
-  var color = '';
+  var letters = '0123456789ABCDEF'.split('')
+  var color = ''
   for (var i = 0; i < 6; i++) {
-    color += letters[Math.round(Math.random() * 15)];
+    color += letters[Math.round(Math.random() * 15)]
   }
-  return color;
+  return color
 }
 
 function findCourseType(courseType, courseID) {
   return function (element) {
-    return element.type === courseType && element.code === courseID;
+    return element.type === courseType && element.code === courseID
   }
 }
 
 function courseLookupByCode(courseCode) {
   return(element) => {
-    return element.name == courseCode;
+    return element.name == courseCode
   }
 }
+
+function getColorByCourseCode(courseCode) {
+  return db.details.find().find(getCourseByCourseCode(courseCode)).color
+}
+
+function getNameByCourseCode(courseCode) {
+  return db.details.find().find(getCourseByCourseCode(courseCode)).name
+}
+
+function getTypeByCRN(courseCode, crn) {
+  let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
+  return crnLookup.find((element) => {
+    return element.crn == crn
+  }).type
+}
+
+function getLocationByCRN(courseCode, crn) {
+  let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
+  return crnLookup.find((element) => {
+    return element.crn == crn
+  }).class.times[0].place
+}
+
+function getIconByCourseCode(courseCode) {
+  return db.details.find().find(getCourseByCourseCode(courseCode)).icon
+}
+
+function getCourseByCourseCode(courseCode) {
+  return (element) => {
+    return element.code == courseCode
+  }
+}
+
+//Project stuff
+ipcMain.on('get-projects', (event, arg) => {
+  event.sender.send('give-projects', (db.projects.find().length > 0 ? db.projects.find() : []))
+})
+
+ipcMain.on('get-projects-today', (event, arg) => {
+  if (db.projects.find().length > 0) {
+    event.sender.send('give-projects-today', db.projects.find().filter(project => {
+      let now = new Date() 
+      let projectDueDate = new Date(project.duedate)
+      if (now.getDate() == projectDueDate.getDate() &&
+          now.getMonth() == projectDueDate.getMonth() &&
+          now.getFullYear() == projectDueDate.getFullYear()) {
+        return true;
+      }
+      return false;
+    }))
+  } else {
+    event.sender.send('give-projects-soon', [])
+  }
+})
+
+ipcMain.on('get-projects-upcoming', (event, arg) => {
+  if (db.projects.find().length > 0) {
+    event.sender.send('give-projects-upcoming', db.projects.find().filter(project => {
+      let now = new Date() 
+      let projectDueDate = new Date(project.duedate)
+      if (!(now.getDate() == projectDueDate.getDate() &&
+          now.getMonth() == projectDueDate.getMonth() &&
+          now.getFullYear() == projectDueDate.getFullYear())) {
+        return true;
+      }
+      return false;
+    }))
+  } else {
+    event.sender.send('give-projects-upcoming', [])
+  }
+})
+
+

@@ -47,10 +47,11 @@ export default {
         let course = arg[i]
         eventArray.push({
           code: course.code,
-          title: course.name + " " + course.type,
+          title: course.name + " " + course.type, // + "\n" + "SIRC2020B",
+          location: "SIRC2020B",
           start: moment(course.startTime),
           end: moment(course.endTime),
-          color: "#" + course.colour
+          color: "#" + course.color
         })
       }
       this.events = eventArray

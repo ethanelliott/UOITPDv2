@@ -24,10 +24,13 @@ export default {
     }
   },
   mounted() {
-    ipcRenderer.send('get-name')
-    ipcRenderer.on('give-name', (event, arg) => {
-      this.name = arg
-    })
+    setTimeout(() => {
+      ipcRenderer.send('get-name')
+      ipcRenderer.on('give-name', (event, arg) => {
+        this.name = arg
+      })
+    }, 500)
+    
   },
   methods: {
     closeWindow: (event) => {

@@ -11,12 +11,6 @@
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/calendar'")
           span Calendar
           i.fa.fa-calendar
-      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/todo'")
-          span To-Do
-          i.fa.fa-list
-      router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/projects'")
-          span Projects
-          i.fa.fa-tasks
       router-link.button(v-on:click.native="isToggle = false", v-bind:to="'/notes'")
           span Notes
           i.fa.fa-file
@@ -25,8 +19,8 @@
           i.fa.fa-cloud
     .courses-container
       .course(v-for="menuItem in menu", :style="{'background': '#' + menuItem.color + 'ff'}")
-        router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.name.toUpperCase()")
-          span(:style="{'color': ((parseInt(menuItem.color.substring(0, 2), 16) * 0.299 + parseInt(menuItem.color.substring(2, 4), 16) * 0.587 + parseInt(menuItem.color.substring(4, 6), 16) * 0.114) > 186 ? '#000000' : '#FFFFFF')}") {{ menuItem.name.toUpperCase() }}
+        router-link.course-button(v-on:click.native="isToggle = false", v-bind:to="'/course/' + menuItem.code.toUpperCase()")
+          span(:style="{'color': ((parseInt(menuItem.color.substring(0, 2), 16) * 0.299 + parseInt(menuItem.color.substring(2, 4), 16) * 0.587 + parseInt(menuItem.color.substring(4, 6), 16) * 0.114) > 186 ? '#000000' : '#FFFFFF')}") {{ menuItem.code.toUpperCase() }}
           i.fa(:class="'fa-' + menuItem.icon", :style="{'color': ((parseInt(menuItem.color.substring(0, 2), 16) * 0.299 + parseInt(menuItem.color.substring(2, 4), 16) * 0.587 + parseInt(menuItem.color.substring(4, 6), 16) * 0.114) > 186 ? '#000000' : '#FFFFFF')}")
     .defaults-container
       router-link.settings-button(v-on:click.native="isToggle = false", v-bind:to="'/settings'")
@@ -71,7 +65,7 @@ export default {
     box-shadow: 0 0 15px 1px rgba(0,0,0,0.5);
     z-index: 50000;
     display:grid;
-    grid-template-rows: 50px 300px auto 50px;
+    grid-template-rows: 50px 200px auto 50px;
     height:100%;
     -webkit-app-region: no-drag;
     transition:left 0.3s;

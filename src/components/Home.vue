@@ -1,5 +1,7 @@
 <template lang="jade">
   #home-container
+    #floating-box-wrapper
+      #floating-box
     #info-container
       #weather-container
         i.wi(v-bind:class="weathericon")
@@ -29,35 +31,44 @@
         #daybreak Today
         #linebreak
         .item-wrapper(v-for="course in courses_today")
-          .item(:style="{'background-color': '#' + course.colour + '40', 'border-left': '10px solid ' + '#' + course.colour + 'ff' }")
+          .item(:style="{'background-color': '#' + course.color + '40', 'border-left': '10px solid ' + '#' + course.color + 'ff' }")
             .event-name {{ course.name + " " + course.type }}
-            .event-location {{ course.place }}
+            .event-location {{ course.location }}
             .event-time {{ (new Date(course.startTime)).toLocaleTimeString() }} - {{ (new Date(course.endTime)).toLocaleTimeString() }}
             .icon(:style="{'color': '#' + course.colour}")
               i.fa(v-bind:class="'fa-' + course.icon")
         #daybreak Tomorrow
         #linebreak
         .item-wrapper(v-for="course in courses_tomorrow")
-          .item(:style="{'background-color': '#' + course.colour + '40', 'border-left': '10px solid ' + '#' + course.colour + 'ff' }")
+          .item(:style="{'background-color': '#' + course.color + '40', 'border-left': '10px solid ' + '#' + course.color + 'ff' }")
             .event-name {{ course.name + " " + course.type }}
-            .event-location {{ course.place }}
+            .event-location {{ course.location }}
             .event-time {{ (new Date(course.startTime)).toLocaleTimeString() }} - {{ (new Date(course.endTime)).toLocaleTimeString() }}
             .icon(:style="{'color': '#' + course.colour}")
               i.fa(v-bind:class="'fa-' + course.icon")
     #projects-container
-      h1 Projects
+      #header-wrapper
+        h1 Projects
+        button.button() +
       #projects-wrapper
-        #daybreak Soon
+        #daybreak Today
         #linebreak
-        .project
-          .project-name Project Name
-          .project-course Course
-          .project-due On this date
+        .project(v-for="project in projects_today", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+          .project-name {{ project.name }}
+          .project-course {{ project.course }}
+          .project-due {{  (new Date(project.duedate)).toLocaleTimeString() }}
           .project-warning
             i.fa.fa-warning
           .project-progress
         #daybreak Upcoming
         #linebreak
+        .project(v-for="project in projects_upcoming", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+          .project-name {{ project.name }}
+          .project-course {{ project.course }}
+          .project-due {{  (new Date(project.duedate)).toLocaleTimeString() }}
+          .project-warning
+            i.fa.fa-warning
+          .project-progress
     #todo-container
       h1 To-Do
 </template>
@@ -103,11 +114,12 @@ export default {
       time: timeFormat(new Date()),
       datestr: dateFormat(new Date()),
       weatherstr: 'Loading Weather...',
-      // eslint-disable-next-line
       weathertemp: '',
       weathericon: 'wi',
       courses_today: [],
-      courses_tomorrow: []
+      courses_tomorrow: [],
+      projects_today: [],
+      projects_upcoming:[]
     }
   },
   methods: {
@@ -125,16 +137,24 @@ export default {
     ipcRenderer.on('not-logged-in', (event, arg) => {
       this.$router.push('/login')
     })
-
-    ipcRenderer.send("get-courses-today")
-    ipcRenderer.on('give-courses-today', (event, arg) => {
-      this.courses_today = arg
-    })
-    ipcRenderer.send("get-courses-tomorrow")
-    ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
-      this.courses_tomorrow = arg
-    })
-
+    setInterval(() => {
+      ipcRenderer.send("get-courses-today")
+      ipcRenderer.on('give-courses-today', (event, arg) => {
+        this.courses_today = arg
+      })
+      ipcRenderer.send("get-courses-tomorrow")
+      ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
+        this.courses_tomorrow = arg
+      })
+      ipcRenderer.send("get-projects-today")
+      ipcRenderer.on('give-projects-today', (event, arg) => {
+        this.projects_today = arg
+      })
+      ipcRenderer.send("get-projects-upcoming")
+      ipcRenderer.on('give-projects-upcoming', (event, arg) => {
+        this.projects_upcoming = arg
+      })
+    }, 500)
     this.getWeather()
     setInterval(() => {
       this.getWeather()
@@ -148,6 +168,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  @import "../sass/forms";
   @import "../sass/colours";
   #home-container {
     color:black;
@@ -162,20 +183,74 @@ export default {
     grid-gap: 1em;
     height:94vh;
     width:100%;
+    #floating-box-wrapper {
+      z-index: 1000;
+      position: fixed;
+      top:0;
+      left:0;
+      background: rgba(0,0,0,0.7);
+      width: 100%;
+      height: 100%;
+      // display: flex;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      #floating-box {
+        width: 800px;
+        height: 700px;
+        background: white;
+        box-shadow: 0 0 20px 2px rgba(0,0,0,0.7);
+      }
+    }
+
+    & > #projects-container {
+      grid-template-rows: 50px auto;
+    }
     & > * {
       display:grid;
-      grid-template-rows: 25px auto;
+      grid-template-rows: 35px auto;
       grid-template-areas: "title" "content";
       color:$main-text-colour;
       background: $background;
       border: 1px solid $main-border;
       padding:0.5em;
       overflow-y: auto;
+      #header-wrapper {
+        display:grid;
+        grid-template-columns: auto 50px;
+        grid-template-areas: "title button";
+        width:100%;
+        background: $background;
+        position: sticky;
+        top: 0px;
+        h1 {
+          font-size: 22px;
+          grid-area: title;
+        }
+        button {
+          background-color: $colourMain;
+          grid-area: button;
+          color: white;
+          font-size: 2em;
+          padding: 0em;
+          margin: 0.1em;
+          border: none;
+          cursor: pointer;
+          opacity: 0.9;
+          border-radius: 50%;
+          transition: all 0.3s;
+        }
+        button:hover {
+          opacity:1;
+          border-radius: 10%;
+          box-shadow: 0 0 20px 1px rgba(0,0,0,0.5);
+        }
+      }
       h1 {
         width:100%;
         background: $background;
         border-bottom: 1px solid $main-border;
-        padding-bottom: 0.25em;
+        padding-bottom: 1em;
         font-size: 22px;
         grid-area: title;
         position: sticky;
@@ -339,15 +414,15 @@ export default {
         .project {
           display: grid;
           grid-template-areas: "a a h" "b b h" "c c h" "d d d";
-          grid-template-columns: 2fr 2fr 1fr;
+          grid-template-columns: 3fr 2fr 1fr;
           grid-template-rows: 3fr 2fr 2fr 1fr;
           border-left: 10px solid rgba(34, 150, 34, 1);
           background: rgba(34, 150, 34, 0.2);
-          height:90px;
           width:100%;
           transition: all 0.3s;
           margin-top:0.5em;
           margin-bottom:0.5em;
+          padding: 0.25em 0;
           font-size:16px;
           &:hover {
             margin-left:1em;
@@ -361,8 +436,11 @@ export default {
           }
           .project-name {
             grid-area: a;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
             margin-left:16px;
-            font-size:18px;
+            font-size:20px;
             font-weight: bold;
           }
           .project-course {
