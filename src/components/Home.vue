@@ -1,7 +1,37 @@
 <template lang="jade">
   #home-container
-    #floating-box-wrapper
-      #floating-box
+    #floating-box-wrapper(v-bind:class="{ invisible: hide_newproject }")
+      #floating-box.project-box
+        #header-wrapper
+          #header Add New Project
+          #project-close-button
+            i.fa.fa-times
+        #content add new project
+        #project-form-wrapper
+          form#project-form(@submit.prevent="getProjectFormValues")
+            input.input(type="text", placeholder="project name")
+            input.input(type="text", placeholder="description")
+            input.input(type="date")
+            input.input(type="time")
+            select.input(placeholder="linked course")
+              option None
+              option(v-for="cor in courses") {{ cor.code }}
+            input.button(type="submit", value="Add")
+    #floating-box-wrapper(v-bind:class="{ invisible: hide_newtodo }")
+      #floating-box.todo-box
+        #header-wrapper
+          #header Add New Todo
+          #todo-close-button
+            i.fa.fa-times
+        #content add new todo
+        #project-form-wrapper
+          form#project-form(@submit.prevent="getTodoFormValues")
+            input.input(type="text", placeholder="todo name")
+            input.input(type="text", placeholder="description")
+            select.input(placeholder="linked course")
+              option None
+              option(v-for="cor in courses") {{ cor.code }}
+            input.button(type="submit", value="Add")
     #info-container
       #weather-container
         i.wi(v-bind:class="weathericon")
@@ -49,7 +79,7 @@
     #projects-container
       #header-wrapper
         h1 Projects
-        button.button() +
+        button.button#new-project() +
       #projects-wrapper
         #daybreak Today
         #linebreak
@@ -70,7 +100,9 @@
             i.fa.fa-warning
           .project-progress
     #todo-container
-      h1 To-Do
+      #header-wrapper
+        h1 To-Do
+        button.button#new-todo() +
 </template>
 
 <script>
@@ -111,18 +143,29 @@ export default {
   name: 'Home',
   data () {
     return {
+      popup_title: "Title",
+      popup_content: "Message",
       time: timeFormat(new Date()),
       datestr: dateFormat(new Date()),
       weatherstr: 'Loading Weather...',
       weathertemp: '',
       weathericon: 'wi',
+      courses: [],
       courses_today: [],
       courses_tomorrow: [],
       projects_today: [],
-      projects_upcoming:[]
+      projects_upcoming:[],
+      hide_newproject: true,
+      hide_newtodo: true
     }
   },
   methods: {
+    getProjectFormValues(submitEvent) {
+      console.log(submitEvent)
+    },
+    getTodoFormValues(submitEvent) {
+      console.log(submitEvent)
+    },
     getWeather () {
       Get('http://api.wunderground.com/api/bbed11284ee97594/conditions/q/autoip.json', 'GET', ($data) => {
         let cur = $data.current_observation
@@ -133,11 +176,30 @@ export default {
     }
   },
   mounted () {
+    let $ = window.document.querySelector.bind(document)
+    let context = this;
+    $("#new-project").onclick = function() {
+      context.hide_newproject = false
+    }
+    $("#new-todo").onclick = function() {
+      context.hide_newtodo = false
+    }
+    $("#project-close-button").onclick = function() {
+      context.hide_newproject = true
+    }
+    $("#todo-close-button").onclick = function() {
+      context.hide_newtodo = true
+    }
+
     ipcRenderer.send("check-login")
     ipcRenderer.on('not-logged-in', (event, arg) => {
       this.$router.push('/login')
     })
     setInterval(() => {
+      ipcRenderer.send("get-courses")
+      ipcRenderer.on('give-courses', (event, arg) => {
+        this.courses = arg
+      })
       ipcRenderer.send("get-courses-today")
       ipcRenderer.on('give-courses-today', (event, arg) => {
         this.courses_today = arg
@@ -183,6 +245,10 @@ export default {
     grid-gap: 1em;
     height:94vh;
     width:100%;
+
+    .invisible{
+      display: none !important;
+    }
     #floating-box-wrapper {
       z-index: 1000;
       position: fixed;
@@ -191,15 +257,63 @@ export default {
       background: rgba(0,0,0,0.7);
       width: 100%;
       height: 100%;
-      // display: flex;
-      display: none;
+      display: flex;
       justify-content: center;
       align-items: center;
+      #floating-box.todo-box {
+        width: 700px;
+        height: 450px;
+      }
+      #floating-box.project-box {
+        width: 700px;
+        height: 600px;
+      }
       #floating-box {
-        width: 800px;
-        height: 700px;
+        width: 700px;
+        height: 600px;
         background: white;
         box-shadow: 0 0 20px 2px rgba(0,0,0,0.7);
+        border-radius: 3px;
+        overflow: hidden;
+        #header-wrapper {
+          display: grid;
+          grid-template-columns: auto 50px;
+          background: $colourMain;
+          color: white;
+          #header {
+            font-size: 2em;
+            margin: 0.25em;
+          }
+          #project-close-button, #todo-close-button {
+            width: 50px;
+            height: 100%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: red;
+            transition: all 0.3s;
+            &:hover {
+              opacity: 0.8;
+              i {
+                cursor: pointer;
+              }
+              cursor: pointer;
+            }
+          }
+        }
+        #content {
+          margin: 1em;
+          font-size: 1.4;
+        }
+        #project-form-wrapper {
+          margin:1.5em;
+          form {
+            display: grid;
+            grid-gap: 1.5em;
+
+          }
+        }
       }
     }
 
@@ -243,7 +357,6 @@ export default {
         button:hover {
           opacity:1;
           border-radius: 10%;
-          box-shadow: 0 0 20px 1px rgba(0,0,0,0.5);
         }
       }
       h1 {
