@@ -9,13 +9,13 @@
         #content add new project
         #project-form-wrapper
           form#project-form(@submit.prevent="getProjectFormValues")
-            input.input(type="text", placeholder="project name")
-            input.input(type="text", placeholder="description")
-            input.input(type="date")
-            input.input(type="time")
-            select.input(placeholder="linked course")
+            input.input(type="text", placeholder="project name", name="name")
+            input.input(type="text", placeholder="description", name="description")
+            input.input(type="date", name="date")
+            input.input(type="time", name="time")
+            select.input(placeholder="linked course", name="course")
               option None
-              option(v-for="cor in courses") {{ cor.code }}
+              option(v-for="cor in courses", :value=" cor.code ") {{ cor.code }} - {{ cor.name }}
             input.button(type="submit", value="Add")
     #floating-box-wrapper(v-bind:class="{ invisible: hide_newtodo }")
       #floating-box.todo-box
@@ -26,11 +26,11 @@
         #content add new todo
         #project-form-wrapper
           form#project-form(@submit.prevent="getTodoFormValues")
-            input.input(type="text", placeholder="todo name")
-            input.input(type="text", placeholder="description")
-            select.input(placeholder="linked course")
+            input.input(type="text", placeholder="todo name", name="name")
+            input.input(type="text", placeholder="description", name="description")
+            select.input(placeholder="linked course", name="course")
               option None
-              option(v-for="cor in courses") {{ cor.code }}
+              option(v-for="cor in courses") {{ cor.code }} - {{ cor.name }}
             input.button(type="submit", value="Add")
     #info-container
       #weather-container
@@ -49,7 +49,7 @@
           span Classes
         #summary.classes(style="color: #c53320")
           #summary-graphic
-            span 0
+            span {{ projects_today.length }}
           span Projects
         #summary.classes(style="color: #ca6614")
           #summary-graphic
@@ -86,7 +86,7 @@
         .project(v-for="project in projects_today", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
           .project-course {{ project.course }}
-          .project-due {{  (new Date(project.duedate)).toLocaleTimeString() }}
+          .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
             i.fa.fa-warning
           .project-progress
@@ -95,7 +95,7 @@
         .project(v-for="project in projects_upcoming", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
           .project-course {{ project.course }}
-          .project-due {{  (new Date(project.duedate)).toLocaleTimeString() }}
+          .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
             i.fa.fa-warning
           .project-progress
@@ -161,7 +161,14 @@ export default {
   },
   methods: {
     getProjectFormValues(submitEvent) {
-      console.log(submitEvent)
+      let es = submitEvent.target.elements
+      ipcRenderer.send("add-new-project", {
+        name: es.name.value,
+        description: es.description.value,
+        date: es.date.value,
+        time: es.time.value,
+        course: es.course.value
+      })
     },
     getTodoFormValues(submitEvent) {
       console.log(submitEvent)
@@ -190,6 +197,14 @@ export default {
     $("#todo-close-button").onclick = function() {
       context.hide_newtodo = true
     }
+
+    ipcRenderer.on('project-added', (event, arg) => {
+      context.hide_newproject = true
+    })
+
+    ipcRenderer.on('todo-added', (event, arg) => {
+      context.hide_newtodo = true
+    })
 
     ipcRenderer.send("check-login")
     ipcRenderer.on('not-logged-in', (event, arg) => {

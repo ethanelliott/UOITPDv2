@@ -505,6 +505,17 @@ ipcMain.on('get-projects-today', (event, arg) => {
   }
 })
 
+ipcMain.on("add-new-project", (event, arg) => {
+  console.log(arg)
+  db.projects.save({
+    name: arg.name,
+    course:arg.course,
+    duedate: moment(arg.date + " " + arg.time).toISOString(),
+    color: getColorByCourseCode(arg.course)
+  })
+  event.sender.send('project-added')
+})
+
 ipcMain.on('get-projects-upcoming', (event, arg) => {
   if (db.projects.find().length > 0) {
     event.sender.send('give-projects-upcoming', db.projects.find().filter(project => {
