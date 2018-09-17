@@ -58,7 +58,7 @@ function createWindow() {
   let mainWindowState = windowStateKeeper({
     defaultWidth: 1000,
     defaultHeight: 795,
-  });
+  })
 
   win = new BrowserWindow({
     webPreferences: {
@@ -75,39 +75,38 @@ function createWindow() {
     transparent: false,
     show: false,
     backgroundColor: "#d2d2d2"
-  });
-  win.loadURL(config.url);
-
+  })
+  win.loadURL(config.url)
   win.once("ready-to-show", () => {
     console.timeEnd("init")
-    win.show();
-    win.focus();
-  });
+    win.show()
+    win.focus()
+  })
 
   win.on('closed', () => {
-    win = null;
-  });
+    win = null
+  })
 
   mainWindowState.manage(win)
 }
 
-app.on('ready', createWindow);
+app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit();
+    app.quit()
   }
-});
+})
 
 app.on('activate', () => {
   if (win === null) {
     try {
-      createWindow();
+      createWindow()
     } catch (e) {
       alert(e)
     }
   }
-});
+})
 
 //All IPC comm 
 ipcMain.on('check-login', (event, arg) => {
@@ -186,6 +185,13 @@ ipcMain.on('get-courses-tomorrow', (event, arg) => {
             return true;
           }
       return false;
+    }).map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.location = getLocationByCRN(ele.code, ele.crn)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.icon = getIconByCourseCode(ele.code)
+      return ele
     }).sort((a, b) => {
       return a.startTimeMilisec - b.startTimeMilisec
     })
@@ -429,9 +435,7 @@ function getDataFromMycampus(userDetails) {
 function randomHexColour() {
   var letters = '0123456789ABCDEF'.split('')
   var color = ''
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.round(Math.random() * 15)]
-  }
+  for (var i = 0; i < 6; i++) { color += letters[Math.round(Math.random() * 15)] }
   return color
 }
 
