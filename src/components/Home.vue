@@ -106,8 +106,7 @@
 </template>
 
 <script>
-const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+const {ipcRenderer} = window.require('electron')
 
 function Get ($url, $method, $callback, $json) {
   $json = $json || false
@@ -143,8 +142,8 @@ export default {
   name: 'Home',
   data () {
     return {
-      popup_title: "Title",
-      popup_content: "Message",
+      popup_title: 'Title',
+      popup_content: 'Message',
       time: timeFormat(new Date()),
       datestr: dateFormat(new Date()),
       weatherstr: 'Loading Weather...',
@@ -154,15 +153,15 @@ export default {
       courses_today: [],
       courses_tomorrow: [],
       projects_today: [],
-      projects_upcoming:[],
+      projects_upcoming: [],
       hide_newproject: true,
       hide_newtodo: true
     }
   },
   methods: {
-    getProjectFormValues(submitEvent) {
+    getProjectFormValues (submitEvent) {
       let es = submitEvent.target.elements
-      ipcRenderer.send("add-new-project", {
+      ipcRenderer.send('add-new-project', {
         name: es.name.value,
         description: es.description.value,
         date: es.date.value,
@@ -170,7 +169,7 @@ export default {
         course: es.course.value
       })
     },
-    getTodoFormValues(submitEvent) {
+    getTodoFormValues (submitEvent) {
       console.log(submitEvent)
     },
     getWeather () {
@@ -184,53 +183,50 @@ export default {
   },
   mounted () {
     let $ = window.document.querySelector.bind(document)
-    let context = this;
-    $("#new-project").onclick = function() {
+    let context = this
+    $('#new-project').onclick = function () {
       context.hide_newproject = false
     }
-    $("#new-todo").onclick = function() {
+    $('#new-todo').onclick = function () {
       context.hide_newtodo = false
     }
-    $("#project-close-button").onclick = function() {
+    $('#project-close-button').onclick = function () {
       context.hide_newproject = true
     }
-    $("#todo-close-button").onclick = function() {
+    $('#todo-close-button').onclick = function () {
       context.hide_newtodo = true
     }
-
     ipcRenderer.on('project-added', (event, arg) => {
       context.hide_newproject = true
     })
-
     ipcRenderer.on('todo-added', (event, arg) => {
       context.hide_newtodo = true
     })
-
-    ipcRenderer.send("check-login")
     ipcRenderer.on('not-logged-in', (event, arg) => {
       this.$router.push('/login')
     })
+    ipcRenderer.on('give-courses', (event, arg) => {
+      this.courses = arg
+    })
+    ipcRenderer.on('give-courses-today', (event, arg) => {
+      this.courses_today = arg
+    })
+    ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
+      this.courses_tomorrow = arg
+    })
+    ipcRenderer.on('give-projects-today', (event, arg) => {
+      this.projects_today = arg
+    })
+    ipcRenderer.on('give-projects-upcoming', (event, arg) => {
+      this.projects_upcoming = arg
+    })
+    ipcRenderer.send('check-login')
     setInterval(() => {
-      ipcRenderer.send("get-courses")
-      ipcRenderer.on('give-courses', (event, arg) => {
-        this.courses = arg
-      })
-      ipcRenderer.send("get-courses-today")
-      ipcRenderer.on('give-courses-today', (event, arg) => {
-        this.courses_today = arg
-      })
-      ipcRenderer.send("get-courses-tomorrow")
-      ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
-        this.courses_tomorrow = arg
-      })
-      ipcRenderer.send("get-projects-today")
-      ipcRenderer.on('give-projects-today', (event, arg) => {
-        this.projects_today = arg
-      })
-      ipcRenderer.send("get-projects-upcoming")
-      ipcRenderer.on('give-projects-upcoming', (event, arg) => {
-        this.projects_upcoming = arg
-      })
+      ipcRenderer.send('get-courses')
+      ipcRenderer.send('get-courses-today')
+      ipcRenderer.send('get-courses-tomorrow')
+      ipcRenderer.send('get-projects-today')
+      ipcRenderer.send('get-projects-upcoming')
     }, 500)
     this.getWeather()
     setInterval(() => {
@@ -277,15 +273,15 @@ export default {
       align-items: center;
       #floating-box.todo-box {
         width: 700px;
-        height: 450px;
+        // height: 450px;
       }
       #floating-box.project-box {
         width: 700px;
-        height: 600px;
+        // height: 600px;
       }
       #floating-box {
         width: 700px;
-        height: 600px;
+        // height: 600px;
         background: white;
         box-shadow: 0 0 20px 2px rgba(0,0,0,0.7);
         border-radius: 3px;

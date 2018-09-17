@@ -14,7 +14,7 @@
 
 <script>
 const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+// const BrowserWindow = remote.BrowserWindow
 const w = remote.getCurrentWindow()
 export default {
   name: 'Header',
@@ -23,14 +23,13 @@ export default {
       name: ''
     }
   },
-  mounted() {
+  mounted () {
     setTimeout(() => {
       ipcRenderer.send('get-name')
       ipcRenderer.on('give-name', (event, arg) => {
         this.name = arg
       })
     }, 500)
-    
   },
   methods: {
     closeWindow: (event) => {

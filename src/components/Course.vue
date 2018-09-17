@@ -5,20 +5,20 @@
 </template>
 
 <script>
-const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+// const {remote, ipcRenderer} = window.require('electron')
+// const BrowserWindow = remote.BrowserWindow
 
 export default {
   name: 'Course',
   data () {
     return {
       course_data: {
-        name: "Name",
-        title: "Title"
+        name: 'Name',
+        title: 'Title'
       }
     }
   },
-  mounted() {
+  mounted () {
 
   },
   props: ['courseid']

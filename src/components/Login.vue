@@ -13,8 +13,8 @@
 </template>
 
 <script>
-const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+const {ipcRenderer} = window.require('electron')
+// const BrowserWindow = remote.BrowserWindow
 
 export default {
   name: 'Login',
@@ -23,7 +23,7 @@ export default {
     }
   },
   methods: {
-    onSubmit(e) {
+    onSubmit (e) {
       ipcRenderer.send('user-login', {
         username: e.target.username.value,
         password: e.target.password.value

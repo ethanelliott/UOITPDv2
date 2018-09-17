@@ -7,13 +7,13 @@
 <script>
 import 'fullcalendar/dist/fullcalendar.css'
 import moment from 'moment'
-const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+const {ipcRenderer} = window.require('electron')
+// const BrowserWindow = remote.BrowserWindow
 
 export default {
   name: 'Calendar',
   data () {
-    let context = this;
+    let context = this
     return {
       title: 'Calendar',
       events: [],
@@ -33,25 +33,24 @@ export default {
           end: '21:00'
         },
         eventRender: function (event, element) { },
-        eventClick: function(calEvent, jsEvent, view) {
+        eventClick: function (calEvent, jsEvent, view) {
           context.$router.push('/course/' + calEvent.code)
         }
       }
     }
   },
-  mounted() {
+  mounted () {
     ipcRenderer.send('get-calendar')
     ipcRenderer.on('give-calendar', (event, arg) => {
       let eventArray = []
-      for(let i = 0; i < arg.length; i++) {
+      for (let i = 0; i < arg.length; i++) {
         let course = arg[i]
         eventArray.push({
           code: course.code,
-          title: course.name + " " + course.type, // + "\n" + "SIRC2020B",
-          // location: "SIRC2020B",
+          title: course.name + ' ' + course.type,
           start: moment(course.startTime),
           end: moment(course.endTime),
-          color: "#" + course.color
+          color: '#' + course.color
         })
       }
       this.events = eventArray
