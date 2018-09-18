@@ -506,7 +506,6 @@ ipcMain.on('get-projects-today', (event, arg) => {
 })
 
 ipcMain.on("add-new-project", (event, arg) => {
-  console.log(arg)
   db.projects.save({
     name: arg.name,
     course:arg.course,
