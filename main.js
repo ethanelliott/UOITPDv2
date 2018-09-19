@@ -146,8 +146,7 @@ ipcMain.on('get-calendar', (event, arg) => {
 })
 
 ipcMain.on('get-course-data', (event, arg) => {
-  let course_code = arg
-  event.sender.send('give-course-data', (db.courses.find().length > 0 ? db.courses.find().filter(course => course.name == course_code) : []))
+  event.sender.send('give-course-data', (db.details.find().length > 0 ? db.details.find().filter(course => course.code == arg) : []))
 })
 
 ipcMain.on('get-courses-today', (event, arg) => {
@@ -599,4 +598,13 @@ ipcMain.on('delete-todo', (event, arg) => {
     _id: arg
   }, false)
   event.sender.send('todo-deleted')
+})
+
+// Course page event handling
+
+ipcMain.on('colour-change', (event, arg) => {
+  let colour = arg.colour
+  let course_code = arg.coursedata.code
+  console.log(course_code, colour)
+  event.sender.send('refresh-course')
 })

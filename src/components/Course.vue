@@ -1,27 +1,51 @@
 <template lang="jade">
   #course-container
-    h1 {{ courseid }} {{ course_data.name }} - {{ course_data.title }}
+    h1
+      i.fa(:class="'fa-' + coursedata.icon") 
+      span &nbsp; {{ coursedata.code + " - " + coursedata.name }}
+    input(type="color", :value="'#' + coursedata.color", @change="colorChange")
+    p {{ coursedata }}
     .long-boi
 </template>
 
 <script>
-// const {remote, ipcRenderer} = window.require('electron')
-// const BrowserWindow = remote.BrowserWindow
+const {remote, ipcRenderer} = window.require('electron')
+const BrowserWindow = remote.BrowserWindow
 
 export default {
   name: 'Course',
   data () {
     return {
-      course_data: {
-        name: 'Name',
-        title: 'Title'
-      }
+      eventLoop: null,
+      coursedata: {}
     }
   },
-  computed: {
-
+  methods: {
+    colorChange(data) {
+      let colour = data.target.value.replace("#", "")
+      ipcRenderer.send('colour-change', {colour, coursedata: this.coursedata})
+    }
   },
-  props: ['courseid']
+  props: ['courseid'],
+  mounted () {
+    let context = this
+    //start data call
+    ipcRenderer.send('get-course-data', context.courseid)
+    //Start data update event loop
+    this.eventLoop = setInterval(() => {
+      // ipcRenderer.send('get-course-data', context.courseid)
+    }, 500)
+    //Handle event responses
+    ipcRenderer.on('give-course-data', (event, arg) => {
+      context.coursedata = arg[0]
+    })
+    ipcRenderer.on('refresh-course', (event, arg) => {
+      event.sender.send('get-course-data', context.courseid)
+    })
+  },
+  beforeDestroy() {
+    clearInterval(this.eventLoop)
+  }
 }
 </script>
 
