@@ -14,8 +14,8 @@
             input.input(type="date", name="date")
             input.input(type="time", name="time")
             select.input(placeholder="linked course", name="course")
-              option None
-              option(v-for="cor in courses", :value=" cor.code ") {{ cor.code }} - {{ cor.name }}
+              option(value="none") None
+              option(v-for="cor in courses", :value="cor.code", :key="cor._id") {{ cor.code }} - {{ cor.name }}
             input.button(type="submit", value="Add")
     #floating-box-wrapper(v-bind:class="{ invisible: hide_editproject }")
       #floating-box.edit-project-box
@@ -26,14 +26,17 @@
         #content Make changes to the project
         #project-form-wrapper
           form#edit-project-form(@submit.prevent="getEditProjectFormValues")
+            input.input(type="hidden", placeholder="id", name="id")
             input.input(type="text", placeholder="project name", name="name")
             input.input(type="text", placeholder="description", name="description")
             input.input(type="date", name="date")
             input.input(type="time", name="time")
             select.input(placeholder="linked course", name="course")
-              option None
-              option(v-for="cor in courses", :value=" cor.code ") {{ cor.code }} - {{ cor.name }}
-            input.button(type="submit", value="Edit")
+              option(value="none") None
+              option(v-for="cor in courses", :value=" cor.code ", :key="cor._id") {{ cor.code }} - {{ cor.name }}
+            #wrapper
+              input.button(type="button", value="DELETE", v-on:click="deleteProject", style="background: red !important;")
+              input.button(type="submit", value="Edit")
     #floating-box-wrapper(v-bind:class="{ invisible: hide_newtodo }")
       #floating-box.todo-box
         #header-wrapper
@@ -42,13 +45,31 @@
             i.fa.fa-times
         #content add new todo
         #project-form-wrapper
-          form#project-form(@submit.prevent="getTodoFormValues")
+          form#todo-form(@submit.prevent="getTodoFormValues")
             input.input(type="text", placeholder="todo name", name="name")
             input.input(type="text", placeholder="description", name="description")
             select.input(placeholder="linked course", name="course")
-              option None
-              option(v-for="cor in courses") {{ cor.code }} - {{ cor.name }}
+              option(value="none") None
+              option(v-for="cor in courses", :value="cor.code", :key="cor._id") {{ cor.code }} - {{ cor.name }}
             input.button(type="submit", value="Add")
+    #floating-box-wrapper(v-bind:class="{ invisible: hide_edittodo }")
+      #floating-box.edit-todo-box
+        #header-wrapper
+          #header Edit Todo
+          #edit-todo-close-button
+            i.fa.fa-times
+        #content Make changes to the todo
+        #project-form-wrapper
+          form#edit-todo-form(@submit.prevent="getEditTodoFormValues")
+            input.input(type="hidden", placeholder="id", name="id")
+            input.input(type="text", placeholder="todo name", name="name")
+            input.input(type="text", placeholder="description", name="description")
+            select.input(placeholder="linked course", name="course")
+              option(value="none") None
+              option(v-for="cor in courses", :value=" cor.code ", :key="cor._id") {{ cor.code }} - {{ cor.name }}
+            #wrapper
+              input.button(type="button", value="DELETE", v-on:click="deleteTodo", style="background: red !important;")
+              input.button(type="submit", value="Edit")
     #info-container
       #weather-container
         i.wi(v-bind:class="weathericon")
@@ -70,15 +91,15 @@
           span Projects
         #summary.classes(style="color: #ca6614")
           #summary-graphic
-            span 0
+            span {{ all_todo.length }}
           span To-Dos
     #schedule-container
       h1 Schedule
       #schedule-wrapper
         #daybreak Today
         #linebreak
-        router-link.item-wrapper(v-for="course in courses_today", v-bind:to="'/course/' + course.code.toUpperCase()")
-          .item(:style="{'background-color': '#' + course.color + '40', 'border-left': '10px solid ' + '#' + course.color + 'ff' }")
+        router-link.item-wrapper(v-for="course in courses_today", v-bind:to="'/course/' + course.code.toUpperCase()", :key="course._id")
+          .item(v-bind:class="{classDone: ((new Date(course.endTime)) - (new Date()) < 0)}", :style="{'background-color': '#' + course.color + '40', 'border-left': '10px solid ' + '#' + course.color + 'ff' }")
             .event-name {{ course.name + " " + course.type }}
             .event-location {{ course.location }}
             .event-time {{ (new Date(course.startTime)).toLocaleTimeString() }} - {{ (new Date(course.endTime)).toLocaleTimeString() }}
@@ -86,7 +107,7 @@
               i.fa(v-bind:class="'fa-' + course.icon")
         #daybreak Tomorrow
         #linebreak
-        router-link.item-wrapper(v-for="course in courses_tomorrow", v-bind:to="'/course/' + course.code.toUpperCase()")
+        router-link.item-wrapper(v-for="course in courses_tomorrow", v-bind:to="'/course/' + course.code.toUpperCase()", :key="course._id")
           .item(:style="{'background-color': '#' + course.color + '40', 'border-left': '10px solid ' + '#' + course.color + 'ff' }")
             .event-name {{ course.name + " " + course.type }}
             .event-location {{ course.location }}
@@ -100,18 +121,18 @@
       #projects-wrapper
         #daybreak Today
         #linebreak
-        .project(v-for="project in projects_today", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+        .project(v-for="project in projects_today", v-on:click="editProject(project)", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
-          .project-course {{ project.course }}
+          .project-course {{ project.coursename }}
           .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
             i.fa.fa-warning
           .project-progress
         #daybreak Upcoming
         #linebreak
-        .project(v-for="project in projects_upcoming", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+        .project(v-for="project in projects_upcoming", v-on:click="editProject(project)", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
-          .project-course {{ project.course }}
+          .project-course {{ project.coursename }}
           .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
             //- i.fa.fa-warning
@@ -120,18 +141,25 @@
       #header-wrapper
         h1 To-Do
         button.button#new-todo() +
+      #todo-wrapper
+        .todo(v-for="todo in all_todo", v-on:click="editTodo(todo)", :key="todo._id", :style="{'background-color': '#' + todo.color + '40', 'border-left': '10px solid ' + '#' + todo.color + 'ff' }")
+          .todo-name {{ todo.name }}
+          .todo-course {{ todo.coursename }}
+          .todo-description {{ todo.description }}
 </template>
 
 <script>
-const { ipcRenderer } = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
-function Get($url, $method, $callback, $json) {
+let $ = window.document.querySelector.bind(document)
+
+function Get ($url, $method, $callback, $json) {
   $json = $json || false
   let xmlhttp
   if (window.XMLHttpRequest) {
     xmlhttp = new XMLHttpRequest()
   }
-  xmlhttp.onreadystatechange = function() {
+  xmlhttp.onreadystatechange = function () {
     if (this.readyState === 4 && this.status === 200) {
       if ($json) {
         $callback(JSON.parse(this.responseText))
@@ -144,82 +172,50 @@ function Get($url, $method, $callback, $json) {
   xmlhttp.send()
 }
 
-function pad(x) {
-  return (x < 10 ? "0" : "") + x
+function pad (x) {
+  return (x < 10 ? '0' : '') + x
 }
-function timeFormat(dob) {
+function timeFormat (dob) {
   return (
     pad(dob.getHours()) +
-    ":" +
+    ':' +
     pad(dob.getMinutes()) +
-    ":" +
+    ':' +
     pad(dob.getSeconds())
   )
 }
 
-function dateFormat(dob) {
+function dateFormat (dob) {
   return dob.toDateString()
 }
 
-function fadeIn(el) {
-  $timeout = $timeout || 400
-  el.style.display = "inherit"
-  el.style.opacity = 0
-  let last = +new Date()
-  let tick = () => {
-    el.style.opacity = +el.style.opacity + (new Date() - last) / $timeout
-    last = +new Date()
-    if (+el.style.opacity < 1) {
-      (window.requestAnimationFrame && requestAnimationFrame(tick)) ||
-        setTimeout(tick, 16)
-    }
-  }
-  tick()
-}
-
-function fadeOut(el) {
-  $timeout = $timeout || 400
-  el.style.display = "inherit"
-  el.style.opacity = 1
-  let last = +new Date()
-  let tick = () => {
-    el.style.opacity = +el.style.opacity - (new Date() - last) / $timeout
-    last = +new Date()
-    if (+el.style.opacity > 0) {
-      (window.requestAnimationFrame && requestAnimationFrame(tick)) ||
-        setTimeout(tick, 16)
-    } else {
-      el.style.display = "none"
-    }
-  }
-  tick()
-}
-
 export default {
-  name: "Home",
-  data() {
+  name: 'Home',
+  data () {
     return {
-      popup_title: "Title",
-      popup_content: "Message",
+      popup_title: 'Title',
+      popup_content: 'Message',
       time: timeFormat(new Date()),
       datestr: dateFormat(new Date()),
-      weatherstr: "Loading Weather...",
-      weathertemp: "",
-      weathericon: "wi",
+      weatherstr: 'Loading Weather...',
+      weathertemp: '',
+      weathericon: 'wi',
       courses: [],
       courses_today: [],
       courses_tomorrow: [],
       projects_today: [],
       projects_upcoming: [],
+      all_todo: [],
       hide_newproject: true,
       hide_editproject: true,
-      hide_newtodo: true
+      hide_newtodo: true,
+      hide_edittodo: true
     }
   },
   methods: {
-    getProjectFormValues(submitEvent) {
+    getProjectFormValues (submitEvent) {
       let es = submitEvent.target.elements
-      ipcRenderer.send("add-new-project", {
+      ipcRenderer.send('add-new-project', {
         name: es.name.value,
         description: es.description.value,
         date: es.date.value,
@@ -227,72 +223,153 @@ export default {
         course: es.course.value
       })
     },
-    getTodoFormValues(submitEvent) {
-      console.log(submitEvent)
+    getEditProjectFormValues (submitEvent) {
+      let es = submitEvent.target.elements
+      ipcRenderer.send('edit-project', {
+        id: es.id.value, // ID from db for reference
+        name: es.name.value,
+        description: es.description.value,
+        date: es.date.value,
+        time: es.time.value,
+        course: es.course.value
+      })
     },
-    getWeather() {
+    editProject (project) {
+      let form = $('#edit-project-form').children
+      let ddo = new Date(project.duedate)
+      form.name.value = project.name
+      form.description.value = project.description
+      form.date.value = ddo.getFullYear() + "-" + pad(ddo.getMonth() + 1) + "-" + pad(ddo.getDate())
+      form.time.value = pad(ddo.getHours()) + ':' + pad(ddo.getMinutes()) + ':' + pad(ddo.getSeconds())
+      form.id.value = project._id
+      form.course.value = project.course
+      this.hide_editproject = false
+    },
+    deleteProject (data) {
+      ipcRenderer.send('delete-project', data.srcElement.parentNode.parentElement.id.value)
+    },
+    deleteTodo (data) {
+      ipcRenderer.send('delete-todo', data.srcElement.parentNode.parentElement.id.value)
+    },
+    getTodoFormValues (submitEvent) {
+      let es = submitEvent.target.elements
+      ipcRenderer.send('add-todo', {
+        name: es.name.value,
+        description: es.description.value,
+        course: es.course.value
+      })
+    },
+    getEditTodoFormValues (submitEvent) {
+      let es = submitEvent.target.elements
+      ipcRenderer.send('edit-todo', {
+        id: es.id.value, // ID from db for reference
+        name: es.name.value,
+        description: es.description.value,
+        course: es.course.value
+      })
+    },
+    editTodo(todo) {
+      let form = $("#edit-todo-form").children
+      form.name.value = todo.name
+      form.description.value = todo.description
+      form.id.value = todo._id
+      form.course.value = todo.course
+      this.hide_edittodo = false
+    },
+    getWeather () {
       Get(
-        "http://api.wunderground.com/api/bbed11284ee97594/conditions/q/autoip.json",
-        "GET",
+        'http://api.wunderground.com/api/bbed11284ee97594/conditions/q/autoip.json',
+        'GET',
         $data => {
           let cur = $data.current_observation
-          this.weathertemp = cur.temp_c + "°C"
+          this.weathertemp = cur.temp_c + '°C'
           this.weatherstr = cur.weather
-          this.weathericon = "wi-wu-" + cur.icon
+          this.weathericon = 'wi-wu-' + cur.icon
         },
         true
       )
     }
   },
-  mounted() {
-    let $ = window.document.querySelector.bind(document)
+  mounted () {
     let context = this
-    $("#new-project").onclick = function() {
+    $('#new-project').onclick = function () {
       context.hide_newproject = false
     }
-    $("#new-todo").onclick = function() {
+    $('#new-todo').onclick = function () {
       context.hide_newtodo = false
     }
-    $("#project-close-button").onclick = function() {
+    $('#project-close-button').onclick = function () {
       context.hide_newproject = true
     }
-    $("#edit-project-close-button").onclick = function() {
+    $('#edit-project-close-button').onclick = function () {
       context.hide_editproject = true
     }
-    $("#todo-close-button").onclick = function() {
+    $('#todo-close-button').onclick = function () {
       context.hide_newtodo = true
     }
-    ipcRenderer.on("project-added", (event, arg) => {
+    $('#edit-todo-close-button').onclick = function () {
+      context.hide_edittodo = true
+    }
+
+    ipcRenderer.on('project-added', (event, arg) => {
       context.hide_newproject = true
     })
-    ipcRenderer.on("todo-added", (event, arg) => {
-      context.hide_newtodo = true
+    ipcRenderer.on('project-deleted', (event, arg) => {
+      context.hide_editproject = true
     })
-    ipcRenderer.on("not-logged-in", (event, arg) => {
-      this.$router.push("/login")
+    ipcRenderer.on('project-edited', (event, arg) => {
+      context.hide_editproject = true
+      let children =  $('#edit-project-form').children
+      for (let i = 0; i < children.length; i++) {
+        if (children[i].type != "submit") {
+          children[i].value = ""
+        }
+      }
     })
-    ipcRenderer.on("give-courses", (event, arg) => {
+    ipcRenderer.on('not-logged-in', (event, arg) => {
+      this.$router.push('/login')
+    })
+    ipcRenderer.on('give-courses', (event, arg) => {
       this.courses = arg
     })
-    ipcRenderer.on("give-courses-today", (event, arg) => {
+    ipcRenderer.on('give-courses-today', (event, arg) => {
       this.courses_today = arg
     })
-    ipcRenderer.on("give-courses-tomorrow", (event, arg) => {
+    ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
       this.courses_tomorrow = arg
     })
-    ipcRenderer.on("give-projects-today", (event, arg) => {
+    ipcRenderer.on('give-projects-today', (event, arg) => {
       this.projects_today = arg
     })
-    ipcRenderer.on("give-projects-upcoming", (event, arg) => {
+    ipcRenderer.on('give-projects-upcoming', (event, arg) => {
       this.projects_upcoming = arg
     })
-    ipcRenderer.send("check-login")
+    ipcRenderer.on('give-todo', (event, arg) => {
+      this.all_todo = arg
+    })
+    ipcRenderer.on('todo-added', (event, arg) => {
+      context.hide_newtodo = true
+    })
+    ipcRenderer.on('todo-deleted', (event, arg) => {
+      context.hide_edittodo = true
+    })
+    ipcRenderer.on('todo-edited', (event, arg) => {
+      context.hide_edittodo = true
+      let children =  $('#edit-todo-form').children
+      for (let i = 0; i < children.length; i++) {
+        if (children[i].type != "submit") {
+          children[i].value = ""
+        }
+      }
+    })
+    ipcRenderer.send('check-login')
     setInterval(() => {
-      ipcRenderer.send("get-courses")
-      ipcRenderer.send("get-courses-today")
-      ipcRenderer.send("get-courses-tomorrow")
-      ipcRenderer.send("get-projects-today")
-      ipcRenderer.send("get-projects-upcoming")
+      ipcRenderer.send('get-courses')
+      ipcRenderer.send('get-todo')
+      ipcRenderer.send('get-courses-today')
+      ipcRenderer.send('get-courses-tomorrow')
+      ipcRenderer.send('get-projects-today')
+      ipcRenderer.send('get-projects-upcoming')
     }, 500)
     this.getWeather()
     setInterval(() => {
@@ -333,6 +410,14 @@ a {
     display: none !important;
     opacity: 0 !important;
   }
+  .classDone {
+    text-decoration: line-through;
+  }
+  #wrapper {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-column-gap: 1em;      
+  }
   #floating-box-wrapper {
     z-index: 1000;
     position: fixed;
@@ -372,7 +457,8 @@ a {
         }
         #project-close-button,
         #todo-close-button,
-        #edit-project-close-button {
+        #edit-project-close-button,
+        #edit-todo-close-button {
           width: 50px;
           height: 100%;
           color: white;
@@ -667,6 +753,60 @@ a {
   }
   #todo-container {
     grid-area: g;
+    #todo-wrapper {
+      margin-top: 1em;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      flex-direction: column;
+      padding-left: 1em;
+      padding-right: 1em;
+      .todo {
+        display: grid;
+        grid-template-areas: "a a h" 
+                             "b b h" 
+                             "c c c";
+        grid-template-columns: auto auto auto;
+        grid-template-rows: auto auto auto;
+        grid-row-gap: 0.5em;
+        border-left: 10px solid rgba(34, 150, 34, 1);
+        background: rgba(34, 150, 34, 0.2);
+        width: 100%;
+        transition: all 0.3s;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        padding: 0.25em 0;
+        font-size: 16px;
+        &:hover {
+          margin-left: 1em;
+        }
+        & > * {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-start;
+          font-size: 16px;
+        }
+        .todo-name {
+          grid-area: a;
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          margin-left: 16px;
+          font-size: 20px;
+          font-weight: bold;
+        }
+        .todo-course {
+          grid-area: b;
+          margin-left: 16px;
+          font-style: italic;
+        }
+        .todo-description {
+          grid-area: c;
+          margin-left: 16px;
+        }
+      }
+    }
   }
 }
 </style>

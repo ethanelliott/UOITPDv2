@@ -347,14 +347,9 @@ function getDataFromMycampus(userDetails) {
                 calArr.push({
                   "code": CRNS[i].code,
                   "crn": CRNS[i].crn,
-                  "name": CRNS[i].name,
-                  "section": CRNS[i].section,
+                  "startTimeMilisec": (new Date(dateRange[0] + " " + CRNS[i].times[j].startTime)).getTime(),
                   "startTime": (new Date(dateRange[0] + " " + CRNS[i].times[j].startTime)).toISOString(),
-                  "endTime": (new Date(dateRange[0] + " " + CRNS[i].times[j].endTime)).toISOString(),
-                  "place": CRNS[i].times[j].place,
-                  "type": CRNS[i].times[j].type,
-                  "colour": db.details.find().find(courseLookupByCode(CRNS[i].code)),
-                  "icon": "book"
+                  "endTime": (new Date(dateRange[0] + " " + CRNS[i].times[j].endTime)).toISOString()
                 })
               } else { //Date range... this gets messy
                 //calculate number of weeks inside the date range
@@ -499,9 +494,15 @@ ipcMain.on('get-projects-today', (event, arg) => {
         return true;
       }
       return false;
+    }).map((ele) => {
+      ele.color = (ele.course != "none" ? getColorByCourseCode(ele.course) : "000000")
+      ele.coursename = (ele.course != "none" ? getNameByCourseCode(ele.course) : "")
+      return ele
+    }).sort((a, b) => {
+      return (new Date(a.duedate)).getTime() - (new Date(b.duedate)).getTime()
     }))
   } else {
-    event.sender.send('give-projects-soon', [])
+    event.sender.send('give-projects-today', [])
   }
 })
 
@@ -509,11 +510,30 @@ ipcMain.on("add-new-project", (event, arg) => {
   db.projects.save({
     name: arg.name,
     course:arg.course,
+    description: arg.description,
     duedate: moment(arg.date + " " + arg.time).toISOString(),
-    color: getColorByCourseCode(arg.course)
   })
   event.sender.send('project-added')
 })
+
+ipcMain.on("edit-project", (event, arg) => {
+  db.projects.update({
+    _id: arg.id
+  },{
+    name: arg.name,
+    course:arg.course,
+    description: arg.description,
+    duedate: moment(arg.date + " " + arg.time).toISOString(),
+  })
+  event.sender.send('project-edited')
+})
+
+ipcMain.on("delete-project", (event, arg) => {
+  db.projects.remove({
+    _id: arg
+  }, false)
+  event.sender.send('project-deleted')
+}) 
 
 ipcMain.on('get-projects-upcoming', (event, arg) => {
   if (db.projects.find().length > 0) {
@@ -526,10 +546,57 @@ ipcMain.on('get-projects-upcoming', (event, arg) => {
         return true;
       }
       return false;
+    }).map((ele) => {
+      ele.color = (ele.course != "none" ? getColorByCourseCode(ele.course) : "000000")
+      ele.coursename = (ele.course != "none" ? getNameByCourseCode(ele.course) : "")
+      return ele
+    }).sort((a, b) => {
+      return (new Date(a.duedate)).getTime() - (new Date(b.duedate)).getTime()
     }))
   } else {
     event.sender.send('give-projects-upcoming', [])
   }
 })
 
+ipcMain.on('get-todo', (event, arg) => {
+  if (db.todo.find().length > 0) {
+    event.sender.send('give-todo', db.todo.find().map((ele) => {
+      ele.color = (ele.course != "none" ? getColorByCourseCode(ele.course) : "000000")
+      ele.coursename = (ele.course != "none" ? getNameByCourseCode(ele.course) : "")
+      return ele
+    }).sort((a, b) => {
+      return (new Date(a.dateadded)).getTime() - (new Date(b.dateadded)).getTime()
+    }))
+  } else {
+    event.sender.send('give-todo', [])
+  }
+})
 
+ipcMain.on('add-todo', (event, arg) => {
+  db.todo.save({
+    name: arg.name,
+    course:arg.course,
+    description: arg.description,
+    dateadded: moment().toISOString(),
+  })
+  event.sender.send('todo-added')
+})
+
+ipcMain.on('edit-todo', (event, arg) => {
+  db.todo.update({
+    _id: arg.id
+  },{
+    name: arg.name,
+    course:arg.course,
+    description: arg.description,
+    dateadded: moment().toISOString(),
+  })
+  event.sender.send('todo-edited')
+})
+
+ipcMain.on('delete-todo', (event, arg) => {
+  db.todo.remove({
+    _id: arg
+  }, false)
+  event.sender.send('todo-deleted')
+})

@@ -24,11 +24,12 @@ export default {
     }
   },
   mounted () {
-    setTimeout(() => {
+    let context = this
+    ipcRenderer.on('give-name', (event, arg) => {
+      context.name = arg
+    })
+    setInterval(() => {
       ipcRenderer.send('get-name')
-      ipcRenderer.on('give-name', (event, arg) => {
-        this.name = arg
-      })
     }, 500)
   },
   methods: {

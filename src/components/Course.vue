@@ -5,8 +5,8 @@
 </template>
 
 <script>
-const {remote, ipcRenderer} = window.require('electron')
-const BrowserWindow = remote.BrowserWindow
+// const {remote, ipcRenderer} = window.require('electron')
+// const BrowserWindow = remote.BrowserWindow
 
 export default {
   name: 'Course',
