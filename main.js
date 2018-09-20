@@ -238,7 +238,7 @@ function getDataFromMycampus(userDetails) {
         cheerio.load(body_01)('p.whitespace1').each(function() {
           nameContentArray.push(this)
         })
-        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '').split(' ')[0] })
+        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '') })
       });
       request.get({
         url: (BASE_URL + DETAIL_URL),
@@ -605,6 +605,12 @@ ipcMain.on('delete-todo', (event, arg) => {
 ipcMain.on('colour-change', (event, arg) => {
   let colour = arg.colour
   let course_code = arg.coursedata.code
+  db.details.update({
+    code: course_code
+  }, {
+    color: colour
+  })
   console.log(course_code, colour)
   event.sender.send('refresh-course')
 })
+

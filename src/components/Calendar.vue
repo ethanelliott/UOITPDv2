@@ -34,7 +34,7 @@ export default {
         },
         eventRender: function (event, element) { },
         eventClick: function (calEvent, jsEvent, view) {
-          context.$router.push('/course/' + calEvent.code)
+          // context.$router.push('/course/' + calEvent.code)
         }
       }
     }
