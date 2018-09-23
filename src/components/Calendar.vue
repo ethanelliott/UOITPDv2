@@ -10,6 +10,8 @@ import moment from 'moment'
 const {ipcRenderer} = window.require('electron')
 // const BrowserWindow = remote.BrowserWindow
 
+let $ = window.document.querySelector.bind(document)
+
 export default {
   name: 'Calendar',
   data () {
@@ -23,6 +25,7 @@ export default {
           center: 'title',
           right: ''
         },
+        contentHeight: () => ($("#calendar-card").clientHeight - 100),
         defaultView: 'agendaWeek',
         nowIndicator: true,
         selectable: false,
