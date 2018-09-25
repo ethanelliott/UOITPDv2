@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1526339208920" clover="3.2.0">
+  <project timestamp="1526339208920" name="All files">
+    <metrics statements="19" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="12" coveredmethods="0" elements="33" coveredelements="0" complexity="0" loc="19" ncloc="19" packages="2" files="8" classes="8">
+      <package name="components">
+        <metrics statements="15" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="10" coveredmethods="0"/>
+        <file name="Calendar.vue" path="D:\repos\UOITPDv2\src\components\Calendar.vue">
+          <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="10" count="0" type="stmt"/>
+        </file>
+        <file name="Course.vue" path="D:\repos\UOITPDv2\src\components\Course.vue">
+          <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="11" count="0" type="stmt"/>
+        </file>
+        <file name="Header.vue" path="D:\repos\UOITPDv2\src\components\Header.vue">
+          <metrics statements="8" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="4" coveredmethods="0"/>
+          <line num="15" count="0" type="stmt"/>
+          <line num="16" count="0" type="stmt"/>
+          <line num="20" count="0" type="stmt"/>
+          <line num="26" count="0" type="stmt"/>
+          <line num="29" count="0" type="cond" truecount="0" falsecount="2"/>
+          <line num="30" count="0" type="stmt"/>
+          <line num="32" count="0" type="stmt"/>
+          <line num="36" count="0" type="stmt"/>
+        </file>
+        <file name="Home.vue" path="D:\repos\UOITPDv2\src\components\Home.vue">
+          <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="15" count="0" type="stmt"/>
+        </file>
+        <file name="Settings.vue" path="D:\repos\UOITPDv2\src\components\Settings.vue">
+          <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="10" count="0" type="stmt"/>
+        </file>
+        <file name="Sidebar.vue" path="D:\repos\UOITPDv2\src\components\Sidebar.vue">
+          <metrics statements="2" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="29" count="0" type="stmt"/>
+          <line num="33" count="0" type="stmt"/>
+        </file>
+        <file name="Todo.vue" path="D:\repos\UOITPDv2\src\components\Todo.vue">
+          <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+          <line num="10" count="0" type="stmt"/>
+        </file>
+      </package>
+      <package name="imp">
+        <metrics statements="4" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
+        <file name="menu.js" path="D:\repos\UOITPDv2\src\imp\menu.js">
+          <metrics statements="4" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
+          <line num="3" count="0" type="stmt"/>
+          <line num="5" count="0" type="stmt"/>
+          <line num="31" count="0" type="stmt"/>
+          <line num="32" count="0" type="stmt"/>
+        </file>
+      </package>
+    </metrics>
+  </project>
+</coverage>

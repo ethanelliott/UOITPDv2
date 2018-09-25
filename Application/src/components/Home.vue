@@ -239,7 +239,7 @@ export default {
       let ddo = new Date(project.duedate)
       form.name.value = project.name
       form.description.value = project.description
-      form.date.value = ddo.getFullYear() + "-" + pad(ddo.getMonth() + 1) + "-" + pad(ddo.getDate())
+      form.date.value = ddo.getFullYear() + '-' + pad(ddo.getMonth() + 1) + '-' + pad(ddo.getDate())
       form.time.value = pad(ddo.getHours()) + ':' + pad(ddo.getMinutes()) + ':' + pad(ddo.getSeconds())
       form.id.value = project._id
       form.course.value = project.course
@@ -268,8 +268,8 @@ export default {
         course: es.course.value
       })
     },
-    editTodo(todo) {
-      let form = $("#edit-todo-form").children
+    editTodo (todo) {
+      let form = $('#edit-todo-form').children
       form.name.value = todo.name
       form.description.value = todo.description
       form.id.value = todo._id
@@ -319,10 +319,10 @@ export default {
     })
     ipcRenderer.on('project-edited', (event, arg) => {
       context.hide_editproject = true
-      let children =  $('#edit-project-form').children
+      let children = $('#edit-project-form').children
       for (let i = 0; i < children.length; i++) {
-        if (children[i].type != "submit") {
-          children[i].value = ""
+        if (children[i].type !== 'submit') {
+          children[i].value = ''
         }
       }
     })
@@ -355,10 +355,10 @@ export default {
     })
     ipcRenderer.on('todo-edited', (event, arg) => {
       context.hide_edittodo = true
-      let children =  $('#edit-todo-form').children
+      let children = $('#edit-todo-form').children
       for (let i = 0; i < children.length; i++) {
-        if (children[i].type != "submit") {
-          children[i].value = ""
+        if (children[i].type !== 'submit') {
+          children[i].value = ''
         }
       }
     })
@@ -416,7 +416,7 @@ a {
   #wrapper {
     display: grid;
     grid-template-columns: auto auto;
-    grid-column-gap: 1em;      
+    grid-column-gap: 1em;
   }
   #floating-box-wrapper {
     z-index: 1000;
@@ -763,8 +763,8 @@ a {
       padding-right: 1em;
       .todo {
         display: grid;
-        grid-template-areas: "a a h" 
-                             "b b h" 
+        grid-template-areas: "a a h"
+                             "b b h"
                              "c c c";
         grid-template-columns: auto auto auto;
         grid-template-rows: auto auto auto;

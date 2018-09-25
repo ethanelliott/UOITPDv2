@@ -1,0 +1,29 @@
+{
+    "name": "uoitpdv2",
+    "version": "1.0.0",
+    "description": "The server for UOITPDv2",
+    "author": "Ethan Elliott <ethan.elliott@hotmail.ca>",
+    "private": true,
+    "scripts": {
+        "dev": "node server.js",
+        "start": "npm run dev"
+    },
+    "main": "server.js",
+    "dependencies": {
+        "aes256": "^1.0.4",
+        "ascii-art": "^1.4.4",
+        "colors": "^1.3.2",
+        "diskdb": "^0.1.17",
+        "express": "^4.16.3",
+        "sha256": "^0.2.0"
+    },
+    "engines": {
+        "node": ">= 6.0.0",
+        "npm": ">= 3.0.0"
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not ie <= 8"
+    ]
+}

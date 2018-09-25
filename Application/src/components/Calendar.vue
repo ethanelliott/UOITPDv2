@@ -15,7 +15,7 @@ let $ = window.document.querySelector.bind(document)
 export default {
   name: 'Calendar',
   data () {
-    let context = this
+    // let context = this
     return {
       title: 'Calendar',
       events: [],
@@ -25,7 +25,7 @@ export default {
           center: 'title',
           right: ''
         },
-        contentHeight: () => ($("#calendar-card").clientHeight - 100),
+        contentHeight: () => ($('#calendar-card').clientHeight - 100),
         defaultView: 'agendaWeek',
         nowIndicator: true,
         selectable: false,
