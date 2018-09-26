@@ -13,9 +13,12 @@ colors.setTheme({
 })
 // server
 const express = require('express')
+const bodyParser = require('body-parser')
 const app = express()
 const http = require('http').Server(app)
 const path = require('path')
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
 app.set('port', port);
 http.listen(port);
 // Local storage
@@ -41,28 +44,39 @@ function salt($len) {
     for (let i = 0; i < $len; i++) {s += ALL[Math.floor(Math.random() * ALL.length)]}
     return s;
 }
-function registerUrl(path, callback) {
-    log('Registering url: ' + path)
-    app.get(path, (req, res) => {
-        log(req.hostname + ' => ' + req.ip)
-        callback(req, res)
+
+function getUserDataByID(id) {
+    return db.userdata.find({
+        studentid: id
     })
 }
 
-function getUserDataByID(id) {
-    return null
+function registerAllUrls() {
+    app.get('/', (req, res) => {
+        log("[GET] /")
+        res.json({'message': 'Hello! Why are you reading this??'})
+    })
+    app.post('/register', (req, res) => {
+        log("[POST] /register")
+        let studentid = req.body.studentid
+        if (getUserDataByID(studentid).length === 0) {
+            // User does not exist in the database
+        } else {
+            // User exists in the database
+        }
+        res.json({'response': studentid})
+    })
 }
 
 // Start console logging
-log(('\n\n\t=============================\n' + '\t┬ ┐ ┌─┐ ┬ ┌┬┐ ┬─┐ ┬─┐     ┌─┐\n' + '\t│ │ │ │ │  │  │─┘ │ │ │┌┘ ┌─┘\n' + '\t└─┘ └─┘ ┴  ┴  ┴   ┴─┘ └┘  └──\n' + '\t=============================\n').logo, true)
+log(('\n\n\t=============================\n' + 
+     '\t┬ ┐ ┌─┐ ┬ ┌┬┐ ┬─┐ ┬─┐     ┌─┐\n' + 
+     '\t│ │ │ │ │  │  │─┘ │ │ │┌┘ ┌─┘\n' + 
+     '\t└─┘ └─┘ ┴  ┴  ┴   ┴─┘ └┘  └──\n' + 
+     '\t=============================\n').logo, true)
 log('\t  Starting UOITPDv2 v' + v + '...\n\n', true)
 log('Session key: ' + sha256(salt(20)).important)
 // URL registration
-log('Begin registering URLs')
-registerUrl('/', (req, res) => {
-    res.json({'Test': 200})
-})
-log('End registering URLs')
-
+registerAllUrls()
 // End
 log('Ready!')

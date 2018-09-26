@@ -6,7 +6,7 @@
           img(src="@/assets/uoit.png" style="height:70%")
         span UOIT MyCampus Login
         p(style="text-align:center;") Sign into MyCampus to get access to all features (don't worry, I won't steal your password)
-      form#login-main-container(v-on:submit.prevent="onSubmit",)
+      form#login-main-container(v-on:submit.prevent="onSubmit")
         input.input(name="username", type="text", placeholder="student id")
         input.input(name="password", type="password", placeholder="password")
         input.button(type="submit", value="Login")

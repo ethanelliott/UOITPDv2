@@ -12,6 +12,7 @@
     "dependencies": {
         "aes256": "^1.0.4",
         "ascii-art": "^1.4.4",
+        "body-parser": "^1.18.3",
         "colors": "^1.3.2",
         "diskdb": "^0.1.17",
         "express": "^4.16.3",

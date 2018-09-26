@@ -19,10 +19,14 @@ const request = require('request-ssl')
 const cheerio = require('cheerio')
 const moment = require('moment')
 const windowStateKeeper = require('electron-window-state')
+// Security
+const sha256 = require('sha256')
+const aes256 = require('aes256')
 // Setup local storage paths and such
 const path = require('path')
 const homedir = require('os').homedir()
 const fs = require('fs')
+const ical = require('ical-generator')
 const storeDir = path.join(homedir, 'uoitpd')
 const dbDir = path.join(homedir, 'uoitpd', 'db')
 if (!fs.existsSync(storeDir)) {
@@ -110,80 +114,6 @@ ipcMain.on('user-login', (event, arg) => {
   }, 1000)
 })
 
-ipcMain.on('get-courses', (event) => {
-  event.sender.send('give-courses', (db.details.find().length > 0 ? db.details.find() : []))
-})
-
-ipcMain.on('get-name', (event) => {
-  event.sender.send('give-name', (db.user.find()[0] ? db.user.find()[0].name : ''))
-})
-
-ipcMain.on('get-calendar', (event) => {
-  if (db.schedule.find().length > 0) {
-    let calArr = db.schedule.find().map((ele) => {
-      ele.color = getColorByCourseCode(ele.code)
-      ele.name = getNameByCourseCode(ele.code)
-      ele.type = getTypeByCRN(ele.code, ele.crn)
-      return ele
-    })
-    event.sender.send('give-calendar', calArr)
-  } else {
-    event.sender.send('give-calendar', [])
-  }
-})
-
-ipcMain.on('get-course-data', (event, arg) => {
-  event.sender.send('give-course-data', (db.details.find().length > 0 ? db.details.find().filter(course => course.code === arg) : []))
-})
-
-ipcMain.on('get-courses-today', (event) => {
-  event.sender.send('give-courses-today',
-    db.schedule.find().filter(cls => {
-      let now = new Date()
-      let clsDate = new Date(cls.startTime)
-      if (now.getDate() === clsDate.getDate() &&
-          now.getMonth() === clsDate.getMonth() &&
-          now.getFullYear() === clsDate.getFullYear()) {
-        return true
-      }
-      return false
-    }).map((ele) => {
-      ele.color = getColorByCourseCode(ele.code)
-      ele.location = getLocationByCRN(ele.code, ele.crn)
-      ele.name = getNameByCourseCode(ele.code)
-      ele.type = getTypeByCRN(ele.code, ele.crn)
-      ele.icon = getIconByCourseCode(ele.code)
-      return ele
-    }).sort((a, b) => {
-      return a.startTimeMilisec - b.startTimeMilisec
-    })
-  )
-})
-
-ipcMain.on('get-courses-tomorrow', (event) => {
-  event.sender.send('give-courses-tomorrow',
-    db.schedule.find().filter(cls => {
-      let now = new Date()
-      let clsDate = new Date(cls.startTime)
-      if (now.getDate() + 1 === clsDate.getDate() &&
-          now.getMonth() === clsDate.getMonth() &&
-          now.getFullYear() === clsDate.getFullYear()) {
-        return true
-      }
-      return false
-    }).map((ele) => {
-      ele.color = getColorByCourseCode(ele.code)
-      ele.location = getLocationByCRN(ele.code, ele.crn)
-      ele.name = getNameByCourseCode(ele.code)
-      ele.type = getTypeByCRN(ele.code, ele.crn)
-      ele.icon = getIconByCourseCode(ele.code)
-      return ele
-    }).sort((a, b) => {
-      return a.startTimeMilisec - b.startTimeMilisec
-    })
-  )
-})
-
 function getDataFromMycampus (userDetails) {
   const LOGIN_URL = 'http://portal.mycampus.ca/cp/home/login'
   const BASE_URL = 'http://portal.mycampus.ca/cp/ip/login?sys=sct&url='
@@ -225,7 +155,10 @@ function getDataFromMycampus (userDetails) {
         cheerio.load(body01)('p.whitespace1').each(function () {
           nameContentArray.push(this)
         })
-        db.user.save({ name: nameContentArray[0].children[0].data.replace('\n', '') })
+        db.user.save({ 
+          name: nameContentArray[0].children[0].data.replace('\n', ''),
+          private_key: sha256(userDetails.username + userDetails.password)
+        })
       })
       request.get({
         url: (BASE_URL + DETAIL_URL),
@@ -441,6 +374,13 @@ function getTypeByCRN (courseCode, crn) {
   }).type
 }
 
+function crnReverseLookup(courseCode, crn) {
+  let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
+  return crnLookup.find((element) => {
+    return element.crn === crn
+  })
+}
+
 function getLocationByCRN (courseCode, crn) {
   let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
   return crnLookup.find((element) => {
@@ -457,6 +397,102 @@ function getCourseByCourseCode (courseCode) {
     return element.code === courseCode
   }
 }
+
+ipcMain.on('get-courses', (event) => {
+  event.sender.send('give-courses', (db.details.find().length > 0 ? db.details.find() : []))
+})
+
+ipcMain.on('get-name', (event) => {
+  event.sender.send('give-name', (db.user.find()[0] ? db.user.find()[0].name : ''))
+})
+
+ipcMain.on('get-calendar', (event) => {
+  if (db.schedule.find().length > 0) {
+    let calArr = db.schedule.find().map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      return ele
+    })
+    event.sender.send('give-calendar', calArr)
+  } else {
+    event.sender.send('give-calendar', [])
+  }
+})
+
+ipcMain.on('get-course-data', (event, arg) => {
+  event.sender.send('give-course-data', (db.details.find().length > 0 ? db.details.find().filter(course => course.code === arg) : []))
+})
+
+ipcMain.on('get-courses-today', (event) => {
+  event.sender.send('give-courses-today',
+    db.schedule.find().filter(cls => {
+      let now = new Date()
+      let clsDate = new Date(cls.startTime)
+      if (now.getDate() === clsDate.getDate() &&
+          now.getMonth() === clsDate.getMonth() &&
+          now.getFullYear() === clsDate.getFullYear()) {
+        return true
+      }
+      return false
+    }).map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.location = getLocationByCRN(ele.code, ele.crn)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.icon = getIconByCourseCode(ele.code)
+      return ele
+    }).sort((a, b) => {
+      return a.startTimeMilisec - b.startTimeMilisec
+    })
+  )
+})
+
+ipcMain.on('get-courses-tomorrow', (event) => {
+  event.sender.send('give-courses-tomorrow',
+    db.schedule.find().filter(cls => {
+      let now = new Date()
+      let clsDate = new Date(cls.startTime)
+      if (now.getDate() + 1 === clsDate.getDate() &&
+          now.getMonth() === clsDate.getMonth() &&
+          now.getFullYear() === clsDate.getFullYear()) {
+        return true
+      }
+      return false
+    }).map((ele) => {
+      ele.color = getColorByCourseCode(ele.code)
+      ele.location = getLocationByCRN(ele.code, ele.crn)
+      ele.name = getNameByCourseCode(ele.code)
+      ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.icon = getIconByCourseCode(ele.code)
+      return ele
+    }).sort((a, b) => {
+      return a.startTimeMilisec - b.startTimeMilisec
+    })
+  )
+})
+
+ipcMain.on('get-ics-calendar', (event) => {
+  let cal = ical({
+    timezone: 'America/New_York'
+  })
+  let calendarData = db.schedule.find()
+  console.log(calendarData.length)
+  for (let i = 0; i < calendarData.length; i++) {
+    let calEvent = calendarData[i]
+    let summary = getNameByCourseCode(calEvent.code) + ' ' + getTypeByCRN(calEvent.code, calEvent.crn)
+    // let description = crnReverseLookup(calEvent.code, calEvent.crn)
+    cal.createEvent({
+      start: new Date(calEvent.startTime),
+      end: new Date(calEvent.endTime),
+      summary: summary,
+      location: getLocationByCRN(calEvent.code, calEvent.crn),
+      description: 'Course'
+    })
+  }
+  console.log(cal.toString())
+  event.sender.send('give-ics-calendar', cal.toString())
+})
 
 // Project stuff
 ipcMain.on('get-projects', (event) => {
@@ -591,6 +627,29 @@ ipcMain.on('colour-change', (event, arg) => {
   }, {
     color: colour
   })
-  console.log(courseCode, colour)
   event.sender.send('refresh-course')
+})
+
+// Backup functions
+ipcMain.on('login-for-backup', (event, arg) => {
+  let testKey = sha256(arg.username + arg.password)
+  let actualKey = db.user.find({
+    private_key: testKey
+  })
+  if (actualKey.length > 0) {
+    // User entered correct details
+    // Start backup system
+
+    request.post({
+      url: 'http://localhost:1337/register',
+      form: {
+        studentid: arg.username
+      }
+    }, (e, r, b) => {
+      console.log(b)
+    })
+  } else {
+    // Incorrect details!
+    // Try again
+  }
 })
