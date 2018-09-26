@@ -31,6 +31,11 @@ export default {
     return {
     }
   },
+  mounted() {
+    ipcRenderer.on('ics-saved', (event) => {
+      new Notification('Calendar data Exported!', { body: 'Calendar data has been exported successfully!' }).show()
+    })
+  },
   methods: {
     exportCalendar(event) {
       dialog.showSaveDialog({
@@ -41,7 +46,7 @@ export default {
           extensions: ["ics"]
         }]
       }, (filename) => {
-        ipcRenderer.send('get-ics-calendar', filename)
+        ipcRenderer.send('save-ics-calendar', filename)
       })
     },
     onSubmit(e) {

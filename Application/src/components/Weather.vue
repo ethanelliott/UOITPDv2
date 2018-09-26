@@ -29,6 +29,11 @@
         span.info-value {{ weathersunset }}
     #forecast-weather-container
       h1.title Forecast
+      #forcast-row(v-for="day in forecast")
+        h3
+          span
+            i.wi(v-bind:class="'wi-wu-' + day.icon")
+          span {{ day.conditions }}
     #weather-radar-container
       iframe(style="width:100%;height:100%;",src="https://maps.darksky.net/@radar,2018-5-23,17,43.750702,-79.300301,8?embed=true&amp;timeControl=false&amp;fieldControl=false&amp;defaultField=radar")
 </template>
@@ -64,7 +69,8 @@ export default {
       weatherhumidity: '',
       weatherwind: '',
       weathersunrise: '',
-      weathersunset: ''
+      weathersunset: '',
+      forecast: []
     }
   },
   mounted () {
@@ -75,8 +81,9 @@ export default {
   },
   methods: {
     getWeather () {
-      Get('http://api.wunderground.com/api/bbed11284ee97594/conditions/astronomy/q/autoip.json', 'GET', ($data) => {
+      Get('http://api.wunderground.com/api/bbed11284ee97594/conditions/alerts/hourly/forecast10day/astronomy/q/autoip.json', 'GET', ($data) => {
         let cur = $data.current_observation
+        this.forecast = $data.forecast.simpleforecast.forecastday
         this.weathertemp = cur.temp_c + '°C'
         this.weatherstr = cur.weather
         this.weathericon = 'wi-wu-' + cur.icon
@@ -172,6 +179,14 @@ iframe {
   }
   #forecast-weather-container {
     grid-area: b;
+    #forcast-row {
+      display: grid;
+      grid-template-rows: 30px auto calc(40% - 30px);
+      grid-template-columns: repeat(5, 20%);
+      grid-template-areas: "a a a a a" "b b c c c" "d e f g h";
+      margin-top:2em;
+      margin-bottom:2em;
+    }
   }
   #weather-radar-container {
     grid-area: c;

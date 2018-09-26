@@ -21,7 +21,7 @@ const moment = require('moment')
 const windowStateKeeper = require('electron-window-state')
 // Security
 const sha256 = require('sha256')
-const aes256 = require('aes256')
+// const aes256 = require('aes256')
 // Setup local storage paths and such
 const path = require('path')
 const homedir = require('os').homedir()
@@ -155,7 +155,7 @@ function getDataFromMycampus (userDetails) {
         cheerio.load(body01)('p.whitespace1').each(function () {
           nameContentArray.push(this)
         })
-        db.user.save({ 
+        db.user.save({
           name: nameContentArray[0].children[0].data.replace('\n', ''),
           private_key: sha256(userDetails.username + userDetails.password)
         })
@@ -374,12 +374,12 @@ function getTypeByCRN (courseCode, crn) {
   }).type
 }
 
-function crnReverseLookup(courseCode, crn) {
-  let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
-  return crnLookup.find((element) => {
-    return element.crn === crn
-  })
-}
+// function crnReverseLookup (courseCode, crn) {
+//   let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
+//   return crnLookup.find((element) => {
+//     return element.crn === crn
+//   })
+// }
 
 function getLocationByCRN (courseCode, crn) {
   let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
@@ -412,8 +412,37 @@ ipcMain.on('get-calendar', (event) => {
       ele.color = getColorByCourseCode(ele.code)
       ele.name = getNameByCourseCode(ele.code)
       ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.allDay = false
       return ele
     })
+    let todoData = db.todo.find()
+    let projectData = db.projects.find()
+    for (let i = 0; i < todoData.length; i++) {
+      let todo = todoData[i]
+      console.log(todo)
+      calArr.push({
+        code: todo.course,
+        name: todo.name + ' - ' + getNameByCourseCode(todo.course),
+        type: '',
+        startTime: todo.dateadded,
+        endTime: todo.dateadded,
+        color: getColorByCourseCode(todo.course),
+        allDay: true
+      })
+    }
+    for (let i = 0; i < projectData.length; i++) {
+      let project = projectData[i]
+      console.log(project)
+      calArr.push({
+        code: project.course,
+        name: project.name + ' - ' + getNameByCourseCode(project.course),
+        type: '',
+        startTime: project.duedate,
+        endTime: project.duedate,
+        color: getColorByCourseCode(project.course),
+        allDay: true
+      })
+    }
     event.sender.send('give-calendar', calArr)
   } else {
     event.sender.send('give-calendar', [])
@@ -472,9 +501,9 @@ ipcMain.on('get-courses-tomorrow', (event) => {
   )
 })
 
-ipcMain.on('get-ics-calendar', (event) => {
+ipcMain.on('save-ics-calendar', (event, filename) => {
   let cal = ical({
-    timezone: 'America/New_York'
+    timezone: 'UTC'
   })
   let calendarData = db.schedule.find()
   console.log(calendarData.length)
@@ -490,8 +519,10 @@ ipcMain.on('get-ics-calendar', (event) => {
       description: 'Course'
     })
   }
-  console.log(cal.toString())
-  event.sender.send('give-ics-calendar', cal.toString())
+  fs.writeFile(filename, cal.toString(), (err) => {
+    if (err) { console.log(err) }
+    event.sender.send('ics-saved')
+  })
 })
 
 // Project stuff

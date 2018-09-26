@@ -48,14 +48,17 @@ export default {
       let eventArray = []
       for (let i = 0; i < arg.length; i++) {
         let course = arg[i]
+        console.log(course.endTime)
         eventArray.push({
           code: course.code,
           title: course.name + ' ' + course.type,
           start: moment(course.startTime),
-          end: moment(course.endTime),
-          color: '#' + course.color
+          end: (course.endTime ? moment(course.endTime) : null),
+          color: '#' + course.color,
+          allDay: course.allDay
         })
       }
+      console.log(eventArray)
       this.events = eventArray
     })
   }
