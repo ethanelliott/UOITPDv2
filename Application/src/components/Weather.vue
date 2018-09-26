@@ -30,10 +30,10 @@
     #forecast-weather-container
       h1.title Forecast
       #forcast-row(v-for="day in forecast")
-        h3
-          span
-            i.wi(v-bind:class="'wi-wu-' + day.icon")
-          span {{ day.conditions }}
+        #icon
+          i.wi(v-bind:class="'wi-wu-' + day.icon")
+        #condition {{ day.date.weekday }} - {{ day.conditions }}
+
     #weather-radar-container
       iframe(style="width:100%;height:100%;",src="https://maps.darksky.net/@radar,2018-5-23,17,43.750702,-79.300301,8?embed=true&amp;timeControl=false&amp;fieldControl=false&amp;defaultField=radar")
 </template>
@@ -83,7 +83,13 @@ export default {
     getWeather () {
       Get('http://api.wunderground.com/api/bbed11284ee97594/conditions/alerts/hourly/forecast10day/astronomy/q/autoip.json', 'GET', ($data) => {
         let cur = $data.current_observation
-        this.forecast = $data.forecast.simpleforecast.forecastday
+        let forecastData = $data.forecast.simpleforecast.forecastday
+        let outArr = []
+        for (let i = 0; i < 8; i++) {
+          outArr.push(forecastData[i])
+        }
+        console.log(outArr)
+        this.forecast = outArr
         this.weathertemp = cur.temp_c + '°C'
         this.weatherstr = cur.weather
         this.weathericon = 'wi-wu-' + cur.icon
@@ -181,11 +187,28 @@ iframe {
     grid-area: b;
     #forcast-row {
       display: grid;
-      grid-template-rows: 30px auto calc(40% - 30px);
-      grid-template-columns: repeat(5, 20%);
-      grid-template-areas: "a a a a a" "b b c c c" "d e f g h";
+      grid-template-columns: 50px auto auto auto auto;
+      grid-template-rows: repeat(2, 25px);
+      grid-template-areas: "a b b b b" "a c d e f";
+      grid-gap: 1em;
       margin-top:2em;
       margin-bottom:2em;
+      #icon {
+        grid-area: a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 50px;
+        color: black;
+      }
+      #condition {
+        grid-area: b;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        font-size: 25px;
+        color: black;
+      }
     }
   }
   #weather-radar-container {
