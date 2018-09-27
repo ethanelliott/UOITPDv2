@@ -33,7 +33,7 @@
         #icon
           i.wi(v-bind:class="'wi-wu-' + day.icon")
         #condition {{ day.date.weekday }} - {{ day.conditions }}
-
+        #other-data
     #weather-radar-container
       iframe(style="width:100%;height:100%;",src="https://maps.darksky.net/@radar,2018-5-23,17,43.750702,-79.300301,8?embed=true&amp;timeControl=false&amp;fieldControl=false&amp;defaultField=radar")
 </template>
@@ -208,6 +208,10 @@ iframe {
         align-items: center;
         font-size: 25px;
         color: black;
+      }
+      #other-data {
+        grid-area: c;
+        background: red;
       }
     }
   }
