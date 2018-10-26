@@ -1,15 +1,4 @@
-console.time('init')
-const PROD = false
-const DATABASE_TABLES = [
-  'details',
-  'schedule',
-  'todo',
-  'notes',
-  'projects',
-  'settings',
-  'user'
-]
-
+const { asSequence } = require('sequency')
 const {
   app,
   BrowserWindow,
@@ -29,18 +18,30 @@ const fs = require('fs')
 const ical = require('ical-generator')
 const storeDir = path.join(homedir, 'uoitpd')
 const dbDir = path.join(homedir, 'uoitpd', 'db')
+let db = require('diskdb')
+
+console.time('init')
+const PROD = true
+const DATABASE_TABLES = [
+  'details',
+  'schedule',
+  'todo',
+  'notes',
+  'projects',
+  'settings',
+  'user'
+]
+
 if (!fs.existsSync(storeDir)) {
   fs.mkdirSync(storeDir)
 }
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir)
 }
-
-let db = require('diskdb')
 db = db.connect(dbDir, DATABASE_TABLES)
 
 const config = {
-  url: (PROD ? `file://${process.cwd()}/dist/index.html` : 'http://localhost:8080/')
+  url: (PROD ? `file://${__dirname}/index.html` : 'http://localhost:8080/')
 }
 
 let win
@@ -68,6 +69,9 @@ function createWindow () {
     backgroundColor: '#d2d2d2'
   })
   win.loadURL(config.url)
+  if (!PROD) {
+    win.webContents.openDevTools()
+  }
   win.once('ready-to-show', () => {
     console.timeEnd('init')
     win.show()
@@ -134,12 +138,8 @@ function getDataFromMycampus (userDetails) {
   } else if (cM > 8 && cM < 13) {
     termDate = now.getFullYear() + '09'
   }
-  let detailLoad = {
-    'term_in': termDate
-  }
-
+  let detailLoad = { 'term_in': termDate }
   let sess = request.jar()
-
   request.post({
     url: LOGIN_URL,
     form: PAYLOAD,

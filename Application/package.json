@@ -12,10 +12,10 @@
     "test": "npm run unit && npm run e2e",
     "lint": "eslint --ext .js,.vue src test/unit test/e2e/specs",
     "build": "node build/build.js",
-    "build-all": "npm run e2e && npm run build",
+    "build-all": "yarn build && electron-packager . UOITPD --all --overwrite --out=compiled",
     "e": "electron ."
   },
-  "main": "main.js",
+  "main": "./dist/main.js",
   "dependencies": {
     "aes256": "^1.0.4",
     "cheerio": "^1.0.0-rc.2",
@@ -30,6 +30,7 @@
     "node-sass": "^4.9.0",
     "request-ssl": "^0.0.14",
     "sass-loader": "^7.0.1",
+    "sequency": "^0.19.2",
     "sha256": "^0.2.0",
     "vue": "^2.5.2",
     "vue-full-calendar": "^2.6.0",
@@ -56,6 +57,7 @@
     "copy-webpack-plugin": "^4.0.1",
     "cross-spawn": "^5.0.1",
     "css-loader": "^0.28.0",
+    "electron-packager": "^12.2.0",
     "eslint": "^4.15.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-friendly-formatter": "^3.0.0",
