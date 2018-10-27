@@ -119,23 +119,35 @@
         h1 Projects
         button.button#new-project() +
       #projects-wrapper
-        #daybreak Today
+        #daybreak Past Due
         #linebreak
-        .project(v-for="project in projects_today", v-on:click="editProject(project)", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+        .project(v-for="project in projects_past", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
           .project-course {{ project.coursename }}
           .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
-            i.fa.fa-warning
+            i.fa.fa-cog(v-on:click="editProject(project)")
+            i.fa.fa-check(v-on:click="markDoneProject(project)")
           .project-progress
-        #daybreak Upcoming
+        #daybreak Due Today
         #linebreak
-        .project(v-for="project in projects_upcoming", v-on:click="editProject(project)", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+        .project(v-for="project in projects_today", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
           .project-name {{ project.name }}
           .project-course {{ project.coursename }}
           .project-due {{  (new Date(project.duedate)).toLocaleString() }}
           .project-warning
-            //- i.fa.fa-warning
+            i.fa.fa-cog(v-on:click="editProject(project)")
+            i.fa.fa-check(v-on:click="markDoneProject(project)")
+          .project-progress
+        #daybreak Due Upcoming
+        #linebreak
+        .project(v-for="project in projects_upcoming", :key="project._id", :style="{'background-color': '#' + project.color + '40', 'border-left': '10px solid ' + '#' + project.color + 'ff' }")
+          .project-name {{ project.name }}
+          .project-course {{ project.coursename }}
+          .project-due {{  (new Date(project.duedate)).toLocaleString() }}
+          .project-warning
+            i.fa.fa-cog(v-on:click="editProject(project)")
+            i.fa.fa-check(v-on:click="markDoneProject(project)")
           .project-progress
     #todo-container
       #header-wrapper
@@ -149,8 +161,8 @@
 </template>
 
 <script>
-const { ipcRenderer } = window.require('electron')
-
+const {ipcRenderer, remote} = window.require('electron')
+const { dialog } = remote
 let $ = window.document.querySelector.bind(document)
 
 function Get ($url, $method, $callback, $json) {
@@ -203,6 +215,7 @@ export default {
       courses: [],
       courses_today: [],
       courses_tomorrow: [],
+      projects_past: [],
       projects_today: [],
       projects_upcoming: [],
       all_todo: [],
@@ -244,6 +257,18 @@ export default {
       form.id.value = project._id
       form.course.value = project.course
       this.hide_editproject = false
+    },
+    markDoneProject (project) {
+      dialog.showMessageBox({
+        type: 'question',
+        title: 'Mark as Done',
+        message: 'Are you sure you want to delete this?',
+        buttons: ['No', 'Yes']
+      }, (response) => {
+        if (response === 1) {
+          ipcRenderer.send('delete-project', project._id)
+        }
+      })
     },
     deleteProject (data) {
       ipcRenderer.send('delete-project', data.srcElement.parentNode.parentElement.id.value)
@@ -338,6 +363,9 @@ export default {
     ipcRenderer.on('give-courses-tomorrow', (event, arg) => {
       this.courses_tomorrow = arg
     })
+    ipcRenderer.on('give-projects-past', (event, arg) => {
+      this.projects_past = arg
+    })
     ipcRenderer.on('give-projects-today', (event, arg) => {
       this.projects_today = arg
     })
@@ -368,6 +396,7 @@ export default {
       ipcRenderer.send('get-todo')
       ipcRenderer.send('get-courses-today')
       ipcRenderer.send('get-courses-tomorrow')
+      ipcRenderer.send('get-projects-past')
       ipcRenderer.send('get-projects-today')
       ipcRenderer.send('get-projects-upcoming')
     }, 500)
@@ -699,7 +728,10 @@ a {
       }
       .project {
         display: grid;
-        grid-template-areas: "a a h" "b b h" "c c h" "d d d";
+        grid-template-areas: "a a h"
+                             "b b h"
+                             "c c h"
+                             "d d d";
         grid-template-columns: 3fr 2fr 1fr;
         grid-template-rows: 3fr 2fr 2fr 1fr;
         border-left: 10px solid rgba(34, 150, 34, 1);
@@ -711,7 +743,9 @@ a {
         padding: 0.25em 0;
         font-size: 16px;
         &:hover {
-          margin-left: 1em;
+          .project-warning {
+            opacity: 1;
+          }
         }
         & > * {
           display: flex;
@@ -738,11 +772,26 @@ a {
           margin-left: 16px;
         }
         .project-warning {
+          opacity: 0;
           display: flex;
           justify-content: center;
           align-items: center;
+          flex-direction: column;
           grid-area: h;
-          font-size: 32px;
+          font-size: 24px;
+          transition: all 0.3s;
+          & > * {
+            margin-top:5px;
+            margin-bottom:5px;
+            transition: all 0.8s;
+            &:hover {
+              transform: rotate(360deg);
+              cursor: pointer;
+              .project-name {
+                text-decoration: line-through;
+              }
+            }
+          }
         }
         .project-progress {
           grid-area: d;

@@ -32,7 +32,7 @@ export default {
     ipcRenderer.send('get-course-data', context.courseid)
     // Start data update event loop
     this.eventLoop = setInterval(() => {
-      // ipcRenderer.send('get-course-data', context.courseid)
+      ipcRenderer.send('get-course-data', context.courseid)
     }, 500)
     // Handle event responses
     ipcRenderer.on('give-course-data', (event, arg) => {

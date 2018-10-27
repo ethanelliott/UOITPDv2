@@ -1,4 +1,5 @@
-const { asSequence } = require('sequency')
+const PROD = true
+const { asSequence } = require('sequency') // This is pretty cool
 const {
   app,
   BrowserWindow,
@@ -21,7 +22,6 @@ const dbDir = path.join(homedir, 'uoitpd', 'db')
 let db = require('diskdb')
 
 console.time('init')
-const PROD = true
 const DATABASE_TABLES = [
   'details',
   'schedule',
@@ -106,19 +106,18 @@ app.on('activate', () => {
 // All IPC comm
 ipcMain.on('check-login', (event) => {
   if (db.user.find().length === 0) {
-    console.log('not logged in')
+    // console.log('not logged in')
     event.sender.send('not-logged-in')
   }
 })
 
 ipcMain.on('user-login', (event, arg) => {
-  getDataFromMycampus(arg)
-  setTimeout(() => {
+  getDataFromMycampus(arg, () => {
     event.sender.send('login-success')
-  }, 1000)
+  })
 })
 
-function getDataFromMycampus (userDetails) {
+function getDataFromMycampus (userDetails, callback) {
   const LOGIN_URL = 'http://portal.mycampus.ca/cp/home/login'
   const BASE_URL = 'http://portal.mycampus.ca/cp/ip/login?sys=sct&url='
   const DETAIL_URL = 'http://ssbp.mycampus.ca/prod_uoit/bwskfshd.P_CrseSchdDetl'
@@ -337,11 +336,107 @@ function getDataFromMycampus (userDetails) {
           })
           // save that SOB
           db.schedule.save(calArr)
+          callback()
         })
       })
     } else {
       // Looks like you got your login creds wrong...try again
-      console.log('Login Error')
+      // console.log('Login Error')
+    }
+  })
+}
+
+ipcMain.on('get-exam-schedule', (event, arg) => {
+  getExamSchedule(arg, () => {
+    event.sender.send('exam-get-success')
+  })
+})
+
+function getExamSchedule (userDetails, callback) {
+  const LOGIN_URL = 'http://portal.mycampus.ca/cp/home/login'
+  const BASE_URL = 'http://portal.mycampus.ca/cp/ip/login?sys=sct&url='
+  const SELECT_URL = 'http://ssbp.mycampus.ca/prod_uoit/bwcklibs.P_StoreTerm'
+  const DETAIL_URL = 'http://ssbp.mycampus.ca/prod_uoit/bwskxshd.P_ExamSched'
+  const PAYLOAD = {
+    'user': userDetails.username,
+    'pass': userDetails.password,
+    'uuid': '0xACA021'
+  }
+  let now = new Date()
+  let cM = now.getMonth() + 1
+  let termDate = ''
+  if ((cM > 0 && cM < 5)) {
+    termDate = (now.getFullYear()) + '01'
+  } else if (cM > 8 && cM < 13) {
+    termDate = now.getFullYear() + '09'
+  }
+  let detailLoad = {
+    'term_in': termDate,
+    'name_var': 'bmenu.P_RegMnu2'
+  }
+  let sess = request.jar()
+  request.post({
+    url: LOGIN_URL,
+    form: PAYLOAD,
+    jar: sess
+  }, (_err0, _res0, body0) => {
+    // Login successful
+    if (!body0.includes('Error: Failed Login')) {
+      request.get({
+        url: (BASE_URL + DETAIL_URL),
+        jar: sess
+      }, () => {
+        request.post({
+          url: SELECT_URL,
+          form: detailLoad,
+          jar: sess
+        }, () => {
+          request.get({
+            url: DETAIL_URL,
+            jar: sess
+          }, (_err1, _res1, body1) => {
+            let tb = []
+            let ch = cheerio.load(body1)
+            ch('table').each(function () { tb.push(this) })
+            let examTable = tb[1].children[1].children
+            let exams = []
+            let examsAsProjects = []
+            for (let j = 1; j < examTable.length; j++) {
+              if (j % 2 === 0) {
+                let courseCode = examTable[j].children[3].children[0].data.split(' ')
+                let rawDate = examTable[j].children[7].children[0].data.split('-')
+                let examDate = new Date(parseCalendarMonth(rawDate[1]) + '-' + rawDate[0] + '-' + rawDate[2])
+                let startDateTime = new Date(examDate.toDateString() + ' ' + examTable[j].children[9].children[0].data)
+                let endDateTime = new Date(examDate.toDateString() + ' ' + examTable[j].children[11].children[0].data)
+                courseCode = courseCode[0] + '' + courseCode[1].slice(0, -1)
+                let examData = {
+                  'code': courseCode,
+                  'crn': examTable[j].children[1].children[0].data,
+                  'startTimeMilisec': startDateTime.getTime(),
+                  'startTime': startDateTime.toISOString(),
+                  'endTime': endDateTime.toISOString(),
+                  'location': examTable[j].children[13].children[0].data,
+                  'type': 'Exam'
+                }
+                exams.push(examData)
+                let examDataAsProject = {
+                  name: 'EXAM',
+                  course: examData.code,
+                  description: 'Final Exam',
+                  duedate: examData.startTime
+                }
+                examsAsProjects.push(examDataAsProject)
+              }
+            }
+            db.schedule.save(exams)
+            db.projects.save(examsAsProjects)
+            callback()
+          })
+        })
+      })
+    } else {
+      // Looks like you got your login creds wrong...try again
+      // console.log('Login Error')
     }
   })
 }
@@ -374,13 +469,6 @@ function getTypeByCRN (courseCode, crn) {
   }).type
 }
 
-// function crnReverseLookup (courseCode, crn) {
-//   let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
-//   return crnLookup.find((element) => {
-//     return element.crn === crn
-//   })
-// }
-
 function getLocationByCRN (courseCode, crn) {
   let crnLookup = db.details.find().find(getCourseByCourseCode(courseCode)).crnLookup
   return crnLookup.find((element) => {
@@ -411,7 +499,7 @@ ipcMain.on('get-calendar', (event) => {
     let calArr = db.schedule.find().map((ele) => {
       ele.color = getColorByCourseCode(ele.code)
       ele.name = getNameByCourseCode(ele.code)
-      ele.type = getTypeByCRN(ele.code, ele.crn)
+      ele.type = (ele.type ? ele.type : getTypeByCRN(ele.code, ele.crn))
       ele.allDay = false
       return ele
     })
@@ -419,7 +507,7 @@ ipcMain.on('get-calendar', (event) => {
     let projectData = db.projects.find()
     for (let i = 0; i < todoData.length; i++) {
       let todo = todoData[i]
-      console.log(todo)
+      // console.log(todo)
       calArr.push({
         code: todo.course,
         name: todo.name + ' - ' + getNameByCourseCode(todo.course),
@@ -432,7 +520,7 @@ ipcMain.on('get-calendar', (event) => {
     }
     for (let i = 0; i < projectData.length; i++) {
       let project = projectData[i]
-      console.log(project)
+      // console.log(project)
       calArr.push({
         code: project.course,
         name: project.name + ' - ' + getNameByCourseCode(project.course),
@@ -466,7 +554,9 @@ ipcMain.on('get-courses-today', (event) => {
       return false
     }).map((ele) => {
       ele.color = getColorByCourseCode(ele.code)
-      ele.location = getLocationByCRN(ele.code, ele.crn)
+      if (!ele.location) {
+        ele.location = getLocationByCRN(ele.code, ele.crn)
+      }
       ele.name = getNameByCourseCode(ele.code)
       ele.type = getTypeByCRN(ele.code, ele.crn)
       ele.icon = getIconByCourseCode(ele.code)
@@ -490,7 +580,9 @@ ipcMain.on('get-courses-tomorrow', (event) => {
       return false
     }).map((ele) => {
       ele.color = getColorByCourseCode(ele.code)
-      ele.location = getLocationByCRN(ele.code, ele.crn)
+      if (!ele.location) {
+        ele.location = getLocationByCRN(ele.code, ele.crn)
+      }
       ele.name = getNameByCourseCode(ele.code)
       ele.type = getTypeByCRN(ele.code, ele.crn)
       ele.icon = getIconByCourseCode(ele.code)
@@ -506,7 +598,7 @@ ipcMain.on('save-ics-calendar', (event, filename) => {
     timezone: 'UTC'
   })
   let calendarData = db.schedule.find()
-  console.log(calendarData.length)
+  // console.log(calendarData.length)
   for (let i = 0; i < calendarData.length; i++) {
     let calEvent = calendarData[i]
     let summary = getNameByCourseCode(calEvent.code) + ' ' + getTypeByCRN(calEvent.code, calEvent.crn)
@@ -515,7 +607,7 @@ ipcMain.on('save-ics-calendar', (event, filename) => {
       start: new Date(calEvent.startTime),
       end: new Date(calEvent.endTime),
       summary: summary,
-      location: getLocationByCRN(calEvent.code, calEvent.crn),
+      location: (calEvent.location ? calEvent.location : getLocationByCRN(calEvent.code, calEvent.crn)),
       description: 'Course'
     })
   }
@@ -587,12 +679,25 @@ ipcMain.on('get-projects-upcoming', (event) => {
     event.sender.send('give-projects-upcoming', db.projects.find().filter(project => {
       let now = new Date()
       let projectDueDate = new Date(project.duedate)
-      if (!(now.getDate() === projectDueDate.getDate() &&
-          now.getMonth() === projectDueDate.getMonth() &&
-          now.getFullYear() === projectDueDate.getFullYear())) {
-        return true
-      }
-      return false
+      return now.valueOf() < projectDueDate.valueOf()
+    }).map((ele) => {
+      ele.color = (ele.course !== 'none' ? getColorByCourseCode(ele.course) : '000000')
+      ele.coursename = (ele.course !== 'none' ? getNameByCourseCode(ele.course) : '')
+      return ele
+    }).sort((a, b) => {
+      return (new Date(a.duedate)).getTime() - (new Date(b.duedate)).getTime()
+    }))
+  } else {
+    event.sender.send('give-projects-upcoming', [])
+  }
+})
+
+ipcMain.on('get-projects-past', (event) => {
+  if (db.projects.find().length > 0) {
+    event.sender.send('give-projects-past', db.projects.find().filter(project => {
+      let now = new Date()
+      let projectDueDate = new Date(project.duedate)
+      return now.valueOf() > projectDueDate.valueOf()
     }).map((ele) => {
       ele.color = (ele.course !== 'none' ? getColorByCourseCode(ele.course) : '000000')
       ele.coursename = (ele.course !== 'none' ? getNameByCourseCode(ele.course) : '')
@@ -670,17 +775,32 @@ ipcMain.on('login-for-backup', (event, arg) => {
   if (actualKey.length > 0) {
     // User entered correct details
     // Start backup system
-
     request.post({
       url: 'http://localhost:1337/register',
       form: {
         studentid: arg.username
       }
     }, (e, r, b) => {
-      console.log(b)
     })
   } else {
     // Incorrect details!
     // Try again
   }
 })
+
+function parseCalendarMonth ($m) {
+  return {
+    'JAN': 1,
+    'FEB': 2,
+    'MAR': 3,
+    'APR': 4,
+    'MAY': 5,
+    'JUN': 6,
+    'JUL': 7,
+    'AUG': 8,
+    'SEP': 9,
+    'OCT': 10,
+    'NOV': 11,
+    'DEC': 12
+  }[$m]
+}
