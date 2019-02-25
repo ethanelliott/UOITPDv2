@@ -1,4 +1,4 @@
-const PROD = true
+const PROD = false
 const { asSequence } = require('sequency') // This is pretty cool
 const {
   app,
@@ -137,6 +137,7 @@ function getDataFromMycampus (userDetails, callback) {
   } else if (cM > 8 && cM < 13) {
     termDate = now.getFullYear() + '09'
   }
+  console.log(termDate)
   let detailLoad = { 'term_in': termDate }
   let sess = request.jar()
   request.post({
@@ -292,8 +293,8 @@ function getDataFromMycampus (userDetails, callback) {
                   let cdt = new Date() // cdt actually stands for course date thing
                   // Add 1 week worth of miliseconds from the start for each week
                   cdt.setTime(start.getTime() + ((7) * 1000 * 60 * 60 * 24 * g))
-                  // This is a little bit annoying. I hate daylight savings. Also, note that months start at 0? for some reason.
-                  if (cdt.getTime() > (new Date(2018, (11 - 1), 4, 0, 0, 0).getTime())) {
+                  // This is a little bit annoying. I hate daylight savings. Also, note that months start at 0
+                  if (cdt.getTime() > (new Date((new Date()).getFullYear(), (11 - 1), 4, 0, 0, 0).getTime())) {
                     cdt.setTime(start.getTime() + (1 * 1000 * 60 * 60 * 24) + ((7) * 1000 * 60 * 60 * 24 * g))
                   }
                   // Special thanks to moment for making this so easy
